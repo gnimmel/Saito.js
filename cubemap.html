@@ -1,0 +1,254 @@
+<!-- 
+
+  ________________________________________.___________    _______  ________ 
+ /   _____/\_   _____/\_   ___ \__    ___/|   \_____  \   \      \/   __   \
+ \_____  \  |    __)_ /    \  \/ |    |   |   |/   |   \  /   |   \____    /
+ /        \ |        \\     \____|    |   |   /    |    \/    |    \ /    / 
+/_______  //_______  / \______  /|____|   |___\_______  /\____|__  //____/  
+        \/         \/         \/                      \/         \/       .co.uk
+
+
+WebGL Template  v.1
+
+cubemap.html
+
+Based on Lesson16 of Learn WebGL
+
+Benjamin Blundell
+
+oni @ section9.co.uk
+
+http://www.section9.co.uk
+http://www.casa.ucl.ac.uk
+
+Based on the excellent work by Giles over at http://learningwebgl.com/
+
+This software is released under Creative Commons Attribution Non-Commercial Share Alike
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+ -->
+
+
+<html>
+<head>
+<title>Basic WebGL Template</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+<link rel="stylesheet" href="css/960.css" />
+<link rel="stylesheet" href="css/S9WebGL.css" />
+
+<!-- JS For Additional OpenGL Functions -->
+
+<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
+<script type="text/javascript" src="js/sylvester.js"></script>
+<script type="text/javascript" src="js/glUtils.js"></script>
+<script type="text/javascript" src="js/webgl-debug.js"></script>
+<script type="text/javascript" src="js/s9WebGL.js"></script>
+
+
+<!-- Main Java Script GL Functions 
+
+- $S is the main Section9 WebGL Class instance that has master control
+
+- $RL is the resource loader instance that controls all resources like
+models, textures and shaders
+
+- $R is shorthand for $RL.resourceByTag and allows nice access to each
+resource via their user assigned name
+
+There are 4 functons to override:
+    - setupResources - loading anything external here
+    - preLoop - Do all your initialization here
+    - draw - make your drawing calls here
+    - update - Update the state of your program here
+
+-->
+<script type="text/javascript">
+
+// Globals you want to mess with
+
+var sphere;
+var shader;
+var rotateX = 0;
+var rotateY = 0;
+var zoom = 1;
+
+
+// ****************************************************
+// Setup controls - JQuery related - Not S9WebGL per-se
+// ****************************************************
+
+$(function(){
+    $('#sliderX').slider({
+        range: false,
+        orientation: "vertical",
+        values: [50],
+        slide: function(event, ui) { 
+            rotateX = 360 / 100 * ui.value - 180;       
+        }
+    });
+    
+    $('#sliderY').slider({
+        range: false,
+        values: [50],
+        slide: function(event, ui) { 
+            rotateY = 360 / 100 * ui.value - 180;      
+        }
+    });
+    
+    $('#sliderZoom').slider({
+        range: false,
+        orientation: "vertical",
+        values: [0],
+        slide: function(event, ui) { 
+            zoom = 5 / 100 *  ui.value + 1;   
+        }
+    });
+    
+    
+});
+
+
+// ****************************************************
+// S9 GL Load resources
+// ****************************************************
+
+$S.setupResources = function () {
+    $RL.addFragmentShader("shaders/cubemap-fs.txt", "cubemapfrag");
+    $RL.addVertexShader("shaders/cubemap-vs.txt", "cubemapvert");
+    
+    // Add the starting url - the function grabs the remaining 6
+    // $RL.addTextureCube("textures/world_night_cube/cube","worldnight_cube");
+    $RL.addTextureCube("textures/world_day_cube/cube","worldday_cube");
+}
+
+// ****************************************************
+// S9 GL Init Variables and Environment
+// ****************************************************
+
+$S.preLoop = function () {
+  
+    sphere = createSphere(50,50);
+
+    // create Shader
+    shader = createShaders("cubemapvert","cubemapfrag", "cubemap");
+    
+    // link variables and shader variables 
+    $S.setActiveShader("cubemap");
+   
+    shader.vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
+    gl.enableVertexAttribArray(shader.vertexPositionAttribute);
+    
+    shader.vertexNormalAttribute = gl.getAttribLocation(shader, "aVertexNormal");
+    gl.enableVertexAttribArray(shader.vertexNormalAttribute);
+    
+    shader.vertexColorAttribute = gl.getAttribLocation(shader, "aVertexColor");
+    gl.enableVertexAttribArray(shader.vertexColorAttribute);
+
+
+    shader.pMatrixUniform   = gl.getUniformLocation(shader, "uPMatrix");
+    shader.mvMatrixUniform  = gl.getUniformLocation(shader, "uMVMatrix");
+  
+   
+}
+
+// ****************************************************
+// S9 GL Update GL
+// ****************************************************
+
+$S.update = function () {
+    if ($S.mouseDown){
+        rotateX += ($S.mouseY - $S.mouseYprev) * 180;
+        rotateY += ($S.mouseX - $S.mouseXprev) * 180;
+    } 
+} 
+
+// ****************************************************
+// S9 GL Drawing
+// ****************************************************
+
+$S.draw = function () {
+    
+    gl.clearColor(0.95, 0.95, 0.95, 1.0);
+    gl.clearDepth(1.0);
+    
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+    loadIdentity();  
+    
+    mvTranslate([0.0, 0.0, -10.0]);
+   
+    mvScale([zoom,zoom,zoom]);
+    
+    mvRotate(rotateX,[1.0,0.0,0.0]); 
+    mvRotate(rotateY,[0.0,1.0,0.0]);  
+   
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldday_cube"]);
+   // gl.uniform1i(shader.samplerUniform, 0);
+    
+    sphere.draw();
+}    
+ 
+</script>
+
+
+</head>
+
+<body onload="S9WebGL.initialize()">
+    
+    <!-- The Progress Dialog for loading resources -->
+    <div id="dialog-modal" title="Loading Resources">
+	    <div id="progressbar"></div>
+    </div>
+
+    
+    <div class="container_16" id="mainLayout">
+        <div class="grid_3">&nbsp;</div>
+        <div class="grid_10">
+            <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
+        </div>
+        <div class="grid_1">
+     
+            <!-- Add some interaction sliders for moving things around -->
+          <div id="sliderX" class="ui-slider ui-slider-vertical ui-widget ui-widget-content ui-corner-all" 
+          style=" height:480px;">
+            <div class="ui-slider-range ui-widget-header" ></div>
+            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
+           
+           </div>
+           
+           <div id="sliderZoom" class="ui-slider ui-slider-vertical ui-widget ui-widget-content ui-corner-all" 
+          style=" height:70px; margin-top:20px;">
+            <div class="ui-slider-range ui-widget-header" ></div>
+            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
+           
+           </div>
+           
+           
+        </div>
+        <div class="clear"></div>
+        <div class="grid_3">&nbsp;</div>
+        <div class="grid_10">
+           <div id="sliderY" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"
+           style="width:480px; margin-top: 20px;">
+            <div class="ui-slider-range ui-widget-header" ></div>
+            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
+           
+           </div>
+        </div>
+        <div class="clear"></div>
+        <div class="grid_3">&nbsp;</div>
+        <div class="grid_10">
+            <p><a href="http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">The official
+            WebGL Page</a> will tell you how to get WebGL Enabled for your browser. In Safari, the easiest
+            thing to do is <a href="http://nightly.webkit.org/">download webkit nightly build</a> and run <pre>defaults write com.apple.Safari WebKitWebGLEnabled -bool YES</pre>
+            in a terminal.</p>
+        
+    </div>
+</body>
+
+</html>
