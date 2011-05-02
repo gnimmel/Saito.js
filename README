@@ -7,7 +7,6 @@
 
 
 SAITO.JS - A framework for WebGL by Section9
-
 Benjamin Blundell
 
 oni @ section9.co.uk
@@ -36,4 +35,8 @@ internal scripts make heavy use of JQuery.
 There are 4 functions you need to play with in the index.html file. These are preloop, update,
 draw and loadresources and are fairly self explanatory.
 
+<<<<<<< HEAD
 Comments are always welcome and I'd love to get feedback.
+=======
+Comments are always welcome and I'd love to get feedback.
+>>>>>>> 5fe0abf71e2fa0f081d6575348d6614ad4ece7d3
