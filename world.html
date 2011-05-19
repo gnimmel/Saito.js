@@ -1,37 +1,36 @@
-<!-- 
-
-  ________________________________________.___________    _______  ________ 
- /   _____/\_   _____/\_   ___ \__    ___/|   \_____  \   \      \/   __   \
- \_____  \  |    __)_ /    \  \/ |    |   |   |/   |   \  /   |   \____    /
- /        \ |        \\     \____|    |   |   /    |    \/    |    \ /    / 
-/_______  //_______  / \______  /|____|   |___\_______  /\____|__  //____/  
-        \/         \/         \/                      \/         \/       .co.uk
-
-
-WebGL Template  v.1
+<!--                   __  .__              ________ 
+   ______ ____   _____/  |_|__| ____   ____/   __   \
+  /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
+  \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    / 
+ /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
+      \/     \/     \/                    \/         
+ 
+THE GHOST IN THE CSH
+ 
+SAITO.JS  v.01
 
 world.html
 
-Based on Lesson16 of Learn WebGL
-
 Benjamin Blundell
 
-oni @ section9.co.uk
+oni@section9.co.uk
 
 http://www.section9.co.uk
-http://www.casa.ucl.ac.uk
 
-Based on the excellent work by Giles over at http://learningwebgl.com/
+Based on the excellent work from:
+
+* Learning WebGL - http://learningwebgl.com/
+* JQuery and JQueryUI - http://jquery.com/
+* Sylvester Maths Library - http://sylvester.jcoglan.com/
 
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
 
  -->
 
-
 <html>
 <head>
-<title>Basic WebGL Template</title>
+<title>Saito.js</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
@@ -45,7 +44,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
-<script type="text/javascript" src="js/s9WebGL.js"></script>
+<script type="text/javascript" src="js/saito.js"></script>
 
 
 <!-- Main Java Script GL Functions 
@@ -120,8 +119,8 @@ $S.setupResources = function () {
     $RL.addVertexShader("shaders/world-vs.txt", "worldvert");
     
     // Add the starting url - the function grabs the remaining 6
-    // $RL.addTextureCube("textures/world_night_cube/cube","worldnight_cube");
-    $RL.addTextureCube("textures/world_day_cube/cube","worldday_cube");
+ 	$RL.addTextureCube("textures/world_night_cube/cube","worldnight_cube");
+    //$RL.addTextureCube("textures/world_day_cube/cube","worldday_cube");
 }
 
 // ****************************************************
@@ -212,7 +211,9 @@ $S.draw = function () {
     mvRotate(rotateX,[1.0,0.0,0.0]); 
     mvRotate(rotateY,[0.0,1.0,0.0]);  
    
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldday_cube"]);
+	//$S.setActiveShader("worldmap");
+   
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldnight_cube"]);
    // gl.uniform1i(shader.samplerUniform, 0);
     
     sphere.draw();
@@ -223,7 +224,7 @@ $S.draw = function () {
 
 </head>
 
-<body onload="S9WebGL.initialize()">
+<body onload="Saito.initialize()">
     
     <!-- The Progress Dialog for loading resources -->
     <div id="dialog-modal" title="Loading Resources">

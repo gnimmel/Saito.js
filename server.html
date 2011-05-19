@@ -1,27 +1,27 @@
-<!-- 
+<!--                   __  .__              ________ 
+   ______ ____   _____/  |_|__| ____   ____/   __   \
+  /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
+  \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    / 
+ /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
+      \/     \/     \/                    \/         
+ 
+THE GHOST IN THE CSH
+ 
+SAITO.JS  v.01
 
-  ________________________________________.___________    _______  ________ 
- /   _____/\_   _____/\_   ___ \__    ___/|   \_____  \   \      \/   __   \
- \_____  \  |    __)_ /    \  \/ |    |   |   |/   |   \  /   |   \____    /
- /        \ |        \\     \____|    |   |   /    |    \/    |    \ /    / 
-/_______  //_______  / \______  /|____|   |___\_______  /\____|__  //____/  
-        \/         \/         \/                      \/         \/       .co.uk
-
-
-WebGL Template  v.1
-
-tweet.html
-
-This page loads tweets from Steven Gray's Tweet-o-meter and maps them to the world
+server.html
 
 Benjamin Blundell
 
-oni @ section9.co.uk
+oni@section9.co.uk
 
 http://www.section9.co.uk
-http://www.casa.ucl.ac.uk
 
-Based on the excellent work by Giles over at http://learningwebgl.com/
+Based on the excellent work from:
+
+* Learning WebGL - http://learningwebgl.com/
+* JQuery and JQueryUI - http://jquery.com/
+* Sylvester Maths Library - http://sylvester.jcoglan.com/
 
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
@@ -29,9 +29,10 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  -->
 
 
+
 <html>
 <head>
-<title>Basic WebGL Template</title>
+<title>Saito.js</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
@@ -45,8 +46,8 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
-<script type="text/javascript" src="js/s9WebGL.js"></script>
-
+<script type="text/javascript" src="js/saito.js"></script>
+<script type="text/javascript" src="js/saito_shapes.js"></script>
 
 <!-- Main Java Script GL Functions 
 
@@ -135,7 +136,7 @@ $(function(){
 // http://www.casa.ucl.ac.uk/tom/ajax-live/liveLocation.json
 
 // ****************************************************
-// S9 GL Load resources
+// Saito Load resources
 // ****************************************************
 
 $S.setupResources = function () {
@@ -147,7 +148,7 @@ $S.setupResources = function () {
 }
 
 // ****************************************************
-// S9 GL Init Variables and Environment
+// Saito Init Variables and Environment
 // ****************************************************
 
 $S.preLoop = function () {
@@ -181,7 +182,7 @@ $S.preLoop = function () {
     						20, 0.25, 
     						1.0, 0.0, 0.0, 1.0);
     						
-	curve3 = createCurve($V([0,0,0]), $V([0.0,3.0,0]), 
+	curve3 = createCurveCube($V([0,0,0]), $V([0.0,3.0,0]), 
     						$V([1.0,0.5,0]), $V([2.0,0.5,0]), 
     						$V([0.0,0.0,1.0]),
     						20, 0.5, 
@@ -206,7 +207,7 @@ $S.preLoop = function () {
 }
 
 // ****************************************************
-// S9 GL Update GL
+// Saito Update GL
 // ****************************************************
 
 $S.update = function () {
@@ -217,7 +218,7 @@ $S.update = function () {
 } 
 
 // ****************************************************
-// S9 GL Drawing
+// Saito Drawing
 // ****************************************************
 
 $S.draw = function () {
@@ -250,7 +251,6 @@ $S.draw = function () {
     curve1.draw();
     curve2.draw();
     curve3.draw();
-   
 }    
  
 </script>
@@ -258,7 +258,7 @@ $S.draw = function () {
 
 </head>
 
-<body onload="S9WebGL.initialize()">
+<body onload="Saito.initialize()">
     
     <!-- The Progress Dialog for loading resources -->
     <div id="dialog-modal" title="Loading Resources">

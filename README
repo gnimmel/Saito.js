@@ -1,10 +1,11 @@
-  ________________________________________.___________    _______  ________ 
- /   _____/\_   _____/\_   ___ \__    ___/|   \_____  \   \      \/   __   \
- \_____  \  |    __)_ /    \  \/ |    |   |   |/   |   \  /   |   \____    /
- /        \ |        \\     \____|    |   |   /    |    \/    |    \ /    / 
-/_______  //_______  / \______  /|____|   |___\_______  /\____|__  //____/  
-        \/         \/         \/                      \/         \/       .co.uk
-
+                       __  .__              ________ 
+   ______ ____   _____/  |_|__| ____   ____/   __   \
+  /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
+  \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    / 
+ /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
+      \/     \/     \/                    \/         
+ 
+THE GHOST IN THE CSH
 
 SAITO.JS - A framework for WebGL by Section9
 Benjamin Blundell
@@ -12,7 +13,6 @@ Benjamin Blundell
 oni @ section9.co.uk
 
 http://www.section9.co.uk
-http://www.casa.ucl.ac.uk
 
 Based on the excellent work by Giles over at http://learningwebgl.com/
 
@@ -20,9 +20,6 @@ This software is released under Creative Commons Attribution Non-Commercial Shar
 http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 Lots of images from : http://visibleearth.nasa.gov/
-
-
-***
 
 The idea of this was to play around with the LearningGL examples from the excellent site:  
 http://learningwebgl.com. I figured it needed to be collected, expanded and turned into something
@@ -35,8 +32,5 @@ internal scripts make heavy use of JQuery.
 There are 4 functions you need to play with in the index.html file. These are preloop, update,
 draw and loadresources and are fairly self explanatory.
 
-<<<<<<< HEAD
 Comments are always welcome and I'd love to get feedback.
-=======
-Comments are always welcome and I'd love to get feedback.
->>>>>>> 5fe0abf71e2fa0f081d6575348d6614ad4ece7d3
+

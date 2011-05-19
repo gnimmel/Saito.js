@@ -1,32 +1,30 @@
-/*
-
-  ________________________________________.___________    _______  ________ 
- /   _____/\_   _____/\_   ___ \__    ___/|   \_____  \   \      \/   __   \
- \_____  \  |    __)_ /    \  \/ |    |   |   |/   |   \  /   |   \____    /
- /        \ |        \\     \____|    |   |   /    |    \/    |    \ /    / 
-/_______  //_______  / \______  /|____|   |___\_______  /\____|__  //____/  
-        \/         \/         \/                      \/         \/       .co.uk
-
-
-WebGL Template  v.1
-
-s9WebGL.js
+/*                     __  .__              ________ 
+   ______ ____   _____/  |_|__| ____   ____/   __   \
+  /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
+  \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    / 
+ /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
+      \/     \/     \/                    \/         
+ 
+THE GHOST IN THE CSH
+ 
+SAITO.JS  v.01
 
 Benjamin Blundell
 
-oni @ section9.co.uk
+oni@section9.co.uk
 
 http://www.section9.co.uk
 
-Uses Sylvester
-http://sylvester.jcoglan.com/
+Based on the excellent work from:
 
-Based on the excellent work by Giles over at http://learningwebgl.com/
+* Learning WebGL - http://learningwebgl.com/
+* JQuery and JQueryUI - http://jquery.com/
+* Sylvester Maths Library - http://sylvester.jcoglan.com/
 
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
 
-*/
+ */
 
 // ****************************************************
 // Globals
@@ -42,14 +40,14 @@ var DEBUG = false;
 // S9 Web GL 'Class' that defines everything
 // ****************************************************
 
-var S9WebGL = new Object();
+var Saito = new Object();
 
 // Possibly don't need to prototype but I'll leave it for now
 
-S9WebGL.prototype = {
+Saito.prototype = {
 
 	_setupResources : function() {
-	    S9WebGL.setupResources(); // This seems really bad! :P
+	    Saito.setupResources(); // This seems really bad! :P
 	    ResourceLoader._load();
 	},
     
@@ -61,46 +59,46 @@ S9WebGL.prototype = {
             }
             alert(str);  
         }
-        S9WebGL.preLoop();    
-        setInterval(S9WebGL.prototype._tick, 15);
+        Saito.preLoop();    
+        setInterval(Saito.prototype._tick, 15);
     },
     
 	
 	_tick : function() {
 	    
 	    var timeNow = new Date().getTime();
-        if (S9WebGL.lastTime  != 0) {
-            S9WebGL.elapsed = timeNow - S9WebGL.lastTime;
+        if (Saito.lastTime  != 0) {
+            Saito.elapsed = timeNow - Saito.lastTime;
         }
-        S9WebGL.lastTime  = timeNow;
+        Saito.lastTime  = timeNow;
 	
-	    S9WebGL.prototype._update();
-	    S9WebGL.prototype._draw();   
+	    Saito.prototype._update();
+	    Saito.prototype._draw();   
 	},
 	
 	_update : function () {
-	    S9WebGL.update();
+	    Saito.update();
 	    
 	    // Technical these mouse elements may not exist yet
-	    S9WebGL.mouseXprev = S9WebGL.mouseX;
-        S9WebGL.mouseYprev = S9WebGL.mouseY; 
+	    Saito.mouseXprev = Saito.mouseX;
+        Saito.mouseYprev = Saito.mouseY; 
 	},
 	
 	_draw : function() {
-	    S9WebGL.draw();    
+	    Saito.draw();    
 	}
 	
 };
 
-S9WebGL.lastTime = 0;	
-S9WebGL.elapsed = 0;
+Saito.lastTime = 0;	
+Saito.elapsed = 0;
 
 function throwOnGLError(err, funcName, args) {
   throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to" + funcName;
 };
 
 
-S9WebGL.initialize = function(){
+Saito.initialize = function(){
     this.canvas = $("#webgl-canvas")[0];	    
 	    
     try {
@@ -132,14 +130,14 @@ S9WebGL.initialize = function(){
     }
 };
 
-S9WebGL.setActiveShader = function(tag) {
-    var shader = S9WebGL.shaders[tag];
-    S9WebGL.activeShader = tag;
+Saito.setActiveShader = function(tag) {
+    var shader = Saito.shaders[tag];
+    Saito.activeShader = tag;
     gl.useProgram(shader);
 };
 
 
-var $S = S9WebGL;
+var $S = Saito;
 
 // ****************************************************
 // Resource handling
@@ -316,7 +314,7 @@ var ResourceLoader = {
                             ResourceLoader.resourceByTag[item[1]] = ro;
                             
                             if (ResourceLoader.nLoaded == 0)
-                                S9WebGL.prototype._allIsLoaded();
+                                Saito.prototype._allIsLoaded();
                         }else{
                             alert('Data file ' + item[0] + 'was empty!');
              
@@ -380,9 +378,9 @@ function createShaders(rvertextag, rfragtag, tag) {
     // really its just a text to text link?
     
     // add Shader to our internal tracker
-    if (tag == undefined) tag = "s" +  S9WebGL.shaders.length;
-    S9WebGL.shaders[tag] =  shaderProgram;
-    S9WebGL.activeShader = tag;
+    if (tag == undefined) tag = "s" +  Saito.shaders.length;
+    Saito.shaders[tag] =  shaderProgram;
+    Saito.activeShader = tag;
     
     return shaderProgram;
 }
@@ -457,7 +455,7 @@ function perspective(fovy, aspect, znear, zfar) {
 // This function takes our OpenGL / Sylvester Matrices and creates something nice a shader can use
 function setMatrixUniforms() {
     // Grab the Active Shader
-    var shaderProgram = S9WebGL.shaders[S9WebGL.activeShader];
+    var shaderProgram = Saito.shaders[Saito.activeShader];
     
     if (shaderProgram != "none"){
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
@@ -486,38 +484,38 @@ function setMatrixUniforms() {
 
 
 function setMouseHandler() {
-    S9WebGL.mouseX = 0;
-    S9WebGL.mouseY = 0;
+    Saito.mouseX = 0;
+    Saito.mouseY = 0;
     
-    S9WebGL.mouseXprev = 0;
-    S9WebGL.mouseYprev = 0;
+    Saito.mouseXprev = 0;
+    Saito.mouseYprev = 0;
     
-    S9WebGL.mouseXstart = 0;
-    S9WebGL.mouseYstart = 0;
+    Saito.mouseXstart = 0;
+    Saito.mouseYstart = 0;
     
-    S9WebGL.mouseDown = false;
+    Saito.mouseDown = false;
 
-    $(S9WebGL.canvas).mousemove(function(event) {
-        var vc = $(S9WebGL.canvas).position();
-        S9WebGL.mouseX =   event.pageX - vc.left;
-        S9WebGL.mouseY =   event.pageY - vc.top;
+    $(Saito.canvas).mousemove(function(event) {
+        var vc = $(Saito.canvas).position();
+        Saito.mouseX =   event.pageX - vc.left;
+        Saito.mouseY =   event.pageY - vc.top;
         
-        S9WebGL.mouseX = S9WebGL.mouseX - (S9WebGL.canvas.width / 2); 
-        S9WebGL.mouseY = S9WebGL.mouseY - (S9WebGL.canvas.height / 2); 
+        Saito.mouseX = Saito.mouseX - (Saito.canvas.width / 2); 
+        Saito.mouseY = Saito.mouseY - (Saito.canvas.height / 2); 
     
-        S9WebGL.mouseX  /=   (S9WebGL.canvas.width / 2);
-        S9WebGL.mouseY  /=   (S9WebGL.canvas.height / 2);    
+        Saito.mouseX  /=   (Saito.canvas.width / 2);
+        Saito.mouseY  /=   (Saito.canvas.height / 2);    
    
     });
     
-    $(S9WebGL.canvas).mousedown ( function () {
-        S9WebGL.mouseDown = true;
-        S9WebGL.mouseXstart = S9WebGL.mouseX;
-        S9WebGL.mouseYstart = S9WebGL.mouseY;         
+    $(Saito.canvas).mousedown ( function () {
+        Saito.mouseDown = true;
+        Saito.mouseXstart = Saito.mouseX;
+        Saito.mouseYstart = Saito.mouseY;         
     });
     
-    $(S9WebGL.canvas).mouseup ( function () {
-        S9WebGL.mouseDown = false;         
+    $(Saito.canvas).mouseup ( function () {
+        Saito.mouseDown = false;         
     });   
    
 }
@@ -540,7 +538,7 @@ function Primitive() {
     
     this.draw = function () {
     
-        var shaderProgram = S9WebGL.shaders[S9WebGL.activeShader];
+        var shaderProgram = Saito.shaders[Saito.activeShader];
     
         if (shaderProgram != "none"){
     
@@ -912,106 +910,6 @@ function loadModel(path) {
     request.send();
 }
 
-
-// ****************************************************
-// Drawing Curves
-// ****************************************************
-
-function B1(t) { return t*t*t }
-function B2(t) { return 3*t*t*(1-t) }
-function B3(t) { return 3*t*(1-t)*(1-t) }
-function B4(t) { return (1-t)*(1-t)*(1-t) }
-
-// val is 0-1
-function pointOnCurve(val,v0,v1,v2,v3) {
-  var pos = $V([
-  v0.e(1)*B1(val) + v1.e(1)*B2(val) + v2.e(1)*B3(val) + v3.e(1)*B4(val),
-  v0.e(2)*B1(val) + v1.e(2)*B2(val) + v2.e(2)*B3(val) + v3.e(2)*B4(val),
-  v0.e(3)*B1(val) + v1.e(3)*B2(val) + v2.e(3)*B3(val) + v3.e(3)*B4(val)]);
-  
-  return pos;
-}
-
-function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
-
-    var curve = new Primitive;
-   	var alignAxis = facing;
-   	var width = w;
-	
-	// Create the Vertices for this curve as a triangle strip facing the 
-	// align axis vector (may need to mess with this in a shader to keep it
-	// facing the viewer (billboarding)
-   
-    gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
-    
-  	var vertices = [];
-  
-  	// Direction gives the next point - this is point segment 0 to 1
-
-  	var vert0 = pointOnCurve(0, start, c0,c1, end); // First point
-  	var vert3 = pointOnCurve(1.0 / segments, start, c0,c1, end);
-  	var dir = vert0.subtract(vert3); // Going back
-  	var up = dir.cross(alignAxis);
-  	up = up.multiply(1.0/up.modulus() * width);
- 
-  	var vert1 = vert0.add(up); // going up to second
-  	var vert2 = vert3.add(up); // across to third point
-  	
-  	vertices.push(vert1.e(1)); vertices.push(vert1.e(2)); vertices.push(vert1.e(3));
-  	vertices.push(vert0.e(1)); vertices.push(vert0.e(2)); vertices.push(vert0.e(3));
-	vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
-	vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
-
-   	for (var i=2; i < segments; i ++){
-		vert0 = pointOnCurve((i-1)/segments, start, c0,c1,end);
-		vert3 = pointOnCurve(i/segments, start, c0,c1,end);
-		var dir = vert0.subtract(vert3); // Going back
-		var up = dir.cross(alignAxis);
-		up = up.multiply(1.0/up.modulus() * width);
-		
-  		vert2 = vert3.add(up); // across to third point
-  	
-		vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
-		vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
-		
-
-	}
-  	   
-    
-    var colors = [];
-    
-  	for (var i=0; i < segments * 2; i ++){
-   		colors.push(r);
-   		colors.push(g);
-   		colors.push(b);
-   		colors.push(a);
-   	}
-   	
-   	var curveVertexIndices = [];
-
-   	for (var i=0; i < segments * 2; i ++){
-   		curveVertexIndices.push(i);
-   	}
-   
- 	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    curve.vertexPositionBuffer.itemSize = 3;
-    curve.vertexPositionBuffer.numItems = vertices.length / 3;
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    curve.vertexColorBuffer.itemSize = 4;
-    curve.vertexColorBuffer.numItems = colors.length / 4;
-    
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
-    curve.vertexIndexBuffer.itemSize = 1;
-    curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
- 
-	curve.drawPrimitive = gl.TRIANGLE_STRIP;
-
-    return curve;
-}
 
 
 
