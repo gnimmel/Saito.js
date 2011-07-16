@@ -9,7 +9,7 @@ THE GHOST IN THE CSH
  
 SAITO.JS  v.01
 
-cubemap.html
+denied.html
 
 Benjamin Blundell
 
@@ -28,6 +28,8 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
  -->
 
+
+
 <html>
 <head>
 <title>Saito.js</title>
@@ -39,13 +41,13 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 <!-- JS For Additional OpenGL Functions -->
 
-<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.6.2.js"></script>
 <script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/saito.js"></script>
-
+<script type="text/javascript" src="js/saito_shapes.js"></script>
 
 <!-- Main Java Script GL Functions 
 
@@ -57,7 +59,7 @@ models, textures and shaders
 - $R is shorthand for $RL.resourceByTag and allows nice access to each
 resource via their user assigned name
 
-There are 4 functons to override:
+There are 4 functions to override:
     - setupResources - loading anything external here
     - preLoop - Do all your initialization here
     - draw - make your drawing calls here
@@ -69,7 +71,11 @@ There are 4 functons to override:
 // Globals you want to mess with
 
 var sphere;
-var shader;
+var locationCubes = {};
+var locationCoords = {};
+var locationHeights = {};
+var worldShader;
+var basicShader;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
@@ -79,7 +85,7 @@ var zoom = 1;
 // Setup controls - JQuery related - Not S9WebGL per-se
 // ****************************************************
 
-$(function(){
+ $(function(){
     $('#sliderX').slider({
         range: false,
         orientation: "vertical",
@@ -111,50 +117,134 @@ $(function(){
 
 
 // ****************************************************
-// S9 GL Load resources
+// Setup a JSON Call every 5 seconds to grab data
+// ****************************************************
+
+//window.setInterval(grabFeeds, 3000);
+
+/*function grabFeeds() { 
+    $.getJSON('http://www.casa.ucl.ac.uk/tom/ajax-live/liveLocation.json', function(data) {
+         $.each(data, function(key, value) { 
+            locationHeights[key]  = value / 100.0;   
+         });
+    });
+}
+*/
+
+// http://www.casa.ucl.ac.uk/tom/ajax-live/liveLocation.json
+
+// ****************************************************
+// Saito Load resources
 // ****************************************************
 
 $S.setupResources = function () {
-    $RL.addFragmentShader("shaders/cubemap-fs.txt", "cubemapfrag");
-    $RL.addVertexShader("shaders/cubemap-vs.txt", "cubemapvert");
     
-    // Add the starting url - the function grabs the remaining 6
-    // $RL.addTextureCube("textures/world_night_cube/cube","worldnight_cube");
-    $RL.addTextureCube("textures/world_day_cube/cube","worldday_cube");
+    	$RL.addFragmentShader("shaders/curve-fs.txt", "curvefrag");
+    	$RL.addVertexShader("shaders/curve-vs.txt", "curvevert");
+    	$RL.addFragmentShader("shaders/world-fs.txt", "worldfrag");
+    	$RL.addVertexShader("shaders/world-vs.txt", "worldvert");
+ 
+//	$RL.addTextureCube("textures/world_day_cube_small/cube","worldday_cube","gif");
+
 }
 
 // ****************************************************
-// S9 GL Init Variables and Environment
+// Saito Init Variables and Environment
 // ****************************************************
 
 $S.preLoop = function () {
-  
-    sphere = createSphere(50,50);
-
-    // create Shader
-    shader = createShaders("cubemapvert","cubemapfrag", "cubemap");
     
-    // link variables and shader variables 
-    $S.setActiveShader("cubemap");
+	sphere = createSphere(20,20);
    
-    shader.vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
-    gl.enableVertexAttribArray(shader.vertexPositionAttribute);
+	curve1 = createCurve($V([0,0,0]), $V([3.0,0,0]), 
+    						$V([1.0,0.5,0]), $V([2.0,0.5,0]), 
+    						$V([0.0,0.0,1.0]),
+    						20, 0.5, 
+    						1.0, 1.0, 0.0, 1.0);
+	curve2 = createCurve($V([0,-1,0]), $V([-3.0,-1,0]), 
+    						$V([-1.0,0.5,0]), $V([-2.0,0.5,0]), 
+    						$V([0.0,0.0,1.0]),
+    						20, 0.25, 
+    						1.0, 0.0, 0.0, 1.0);
+    						
+	curve3 = createCurveCube($V([0,0,0]), $V([0.0,3.0,0]), 
+    						$V([1.0,0.5,0]), $V([2.0,0.5,0]), 
+    						$V([0.0,0.0,1.0]),
+    						20, 0.5, 
+    						1.0, 1.0, 0.0, 1.0);
+    						
+	curve4 = createWorldCurveCube(50, 0, 0, 90, 0.5,
+    						20, 0.05, 
+    						0.0, 1.0, 0.0, 1.0);
     
-    shader.vertexNormalAttribute = gl.getAttribLocation(shader, "aVertexNormal");
-    gl.enableVertexAttribArray(shader.vertexNormalAttribute);
-    
-    shader.vertexColorAttribute = gl.getAttribLocation(shader, "aVertexColor");
-    gl.enableVertexAttribArray(shader.vertexColorAttribute);
+	
+	// World Shader
+         
+        worldShader = createShaders("worldvert", "worldfrag", "world");
+	
+	$S.setActiveShader("world");
+	worldShader.vertexPositionAttribute = gl.getAttribLocation(worldShader, "aVertexPosition");
+	gl.enableVertexAttribArray(worldShader.vertexPositionAttribute);
+
+	worldShader.vertexNormalAttribute = gl.getAttribLocation(worldShader, "aVertexNormal");
+	
+
+	//gl.enableVertexAttribArray(worldShader.vertexNormalAttribute);
+
+	worldShader.textureCoordAttribute = gl.getAttribLocation(worldShader, "aTextureCoord");
+	gl.enableVertexAttribArray(worldShader.textureCoordAttribute);
+
+	worldShader.pMatrixUniform   = gl.getUniformLocation(worldShader, "uPMatrix");
+	worldShader.mvMatrixUniform  = gl.getUniformLocation(worldShader, "uMVMatrix");
+	worldShader.nMatrixUniform   = gl.getUniformLocation(worldShader, "uNMatrix");
+	worldShader.samplerUniform   = gl.getUniformLocation(worldShader, "uSampler");
+
+	worldShader.materialAmbientColorUniform  = gl.getUniformLocation(worldShader, "uMaterialAmbientColor");
+	worldShader.materialDiffuseColorUniform  = gl.getUniformLocation(worldShader, "uMaterialDiffuseColor");
+	worldShader.materialSpecularColorUniform = gl.getUniformLocation(worldShader, "uMaterialSpecularColor");
+	worldShader.materialShininessUniform     = gl.getUniformLocation(worldShader, "uMaterialShininess");
+	worldShader.materialEmissiveColorUniform = gl.getUniformLocation(worldShader, "uMaterialEmissiveColor");
+	worldShader.ambientLightingColorUniform  = gl.getUniformLocation(worldShader, "uAmbientLightingColor");
+	worldShader.pointLightingLocationUniform = gl.getUniformLocation(worldShader, "uPointLightingLocation");
+	worldShader.pointLightingSpecularColorUniform    = gl.getUniformLocation(worldShader, "uPointLightingSpecularColor");
+	worldShader.pointLightingDiffuseColorUniform     = gl.getUniformLocation(worldShader, "uPointLightingDiffuseColor");
+
+	// Fixed variables for now
+
+	gl.uniform3f(worldShader.ambientLightingColorUniform, 0.2, 0.2, 0.2);
+	gl.uniform3f(worldShader.pointLightingLocationUniform, 0, 5, 10);
+	gl.uniform3f(worldShader.pointLightingDiffuseColorUniform, 0.5, 0.5, 0.5);
+	gl.uniform3f(worldShader.pointLightingSpecularColorUniform, 0.5, 0.5, 0.5);
+
+	gl.uniform3f(worldShader.materialAmbientColorUniform, 1.0, 1.0, 1.0);
+	gl.uniform3f(worldShader.materialDiffuseColorUniform, 1.0, 1.0, 1.0);
+	gl.uniform3f(worldShader.materialSpecularColorUniform, 1.5, 1.5, 1.5);
+	gl.uniform1f(worldShader.materialShininessUniform, 10);
+	gl.uniform3f(worldShader.materialEmissiveColorUniform, 0.5, 0.5, 0.5);
 
 
-    shader.pMatrixUniform   = gl.getUniformLocation(shader, "uPMatrix");
-    shader.mvMatrixUniform  = gl.getUniformLocation(shader, "uMVMatrix");
-  
-   
+
+
+	// Curve Shader
+    
+	// create Shader
+	curveShader = createShaders("curvevert","curvefrag", "curve");
+	$S.setActiveShader("curve");
+
+	curveShader.vertexPositionAttribute = gl.getAttribLocation(curveShader, "aVertexPosition");
+	gl.enableVertexAttribArray(curveShader.vertexPositionAttribute);
+
+	curveShader.vertexColorAttribute = gl.getAttribLocation(curveShader, "aVertexColor");
+	gl.enableVertexAttribArray(curveShader.vertexColorAttribute);
+
+	curveShader.pMatrixUniform   = gl.getUniformLocation(curveShader, "uPMatrix");
+	curveShader.mvMatrixUniform  = gl.getUniformLocation(curveShader, "uMVMatrix");
+
+         
 }
 
 // ****************************************************
-// S9 GL Update GL
+// Saito Update GL
 // ****************************************************
 
 $S.update = function () {
@@ -165,31 +255,42 @@ $S.update = function () {
 } 
 
 // ****************************************************
-// S9 GL Drawing
+// Saito Drawing
 // ****************************************************
 
 $S.draw = function () {
-    
-    gl.clearColor(0.95, 0.95, 0.95, 1.0);
-    gl.clearDepth(1.0);
-    
-    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-    loadIdentity();  
+	gl.clearColor(0.05, 0.05, 0.05, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	loadIdentity();  
+
+	// Draw the world first.
+
+	mvTranslate([0.0, 0.0, -10.0]);
+
+	mvScale([zoom,zoom,zoom]);
     
-    mvTranslate([0.0, 0.0, -10.0]);
-   
-    mvScale([zoom,zoom,zoom]);
+ 	mvRotate(rotateX,[1.0,0.0,0.0]); 
+ 	mvRotate(rotateY,[0.0,1.0,0.0]);  
+	   
+ 	$S.setActiveShader("world");
     
-    mvRotate(rotateX,[1.0,0.0,0.0]); 
-    mvRotate(rotateY,[0.0,1.0,0.0]);  
-   
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldday_cube"]);
-   // gl.uniform1i(shader.samplerUniform, 0);
+	//gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldday_cube"]);
+
+	sphere.draw();
     
-    sphere.draw();
+	// Now draw the bars
+	$S.setActiveShader("curve");
+    
+	curve1.draw();
+	curve2.draw();
+ 	curve3.draw();
+	curve4.draw();
 }    
  
 </script>

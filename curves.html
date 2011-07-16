@@ -41,7 +41,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 <!-- JS For Additional OpenGL Functions -->
 
-<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.6.2.js"></script>
 <script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
@@ -59,7 +59,7 @@ models, textures and shaders
 - $R is shorthand for $RL.resourceByTag and allows nice access to each
 resource via their user assigned name
 
-There are 4 functons to override:
+There are 4 functions to override:
     - setupResources - loading anything external here
     - preLoop - Do all your initialization here
     - draw - make your drawing calls here
@@ -80,14 +80,12 @@ var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
 
-var testcurve;
-
 
 // ****************************************************
 // Setup controls - JQuery related - Not S9WebGL per-se
 // ****************************************************
 
-$(function(){
+ $(function(){
     $('#sliderX').slider({
         range: false,
         orientation: "vertical",
@@ -143,7 +141,7 @@ $S.setupResources = function () {
     
     $RL.addFragmentShader("shaders/curve-fs.txt", "curvefrag");
     $RL.addVertexShader("shaders/curve-vs.txt", "curvevert");
-    
+ 
 
 }
 
@@ -152,26 +150,10 @@ $S.setupResources = function () {
 // ****************************************************
 
 $S.preLoop = function () {
-
-	var v0 = pointOnCurve(0,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-	var v1 = pointOnCurve(0.15,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-	var v2 = pointOnCurve(0.3,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-	var v3 = pointOnCurve(0.45,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-  	var v4 = pointOnCurve(0.7,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-    var v5 = pointOnCurve(0.85,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-    var v6 = pointOnCurve(1.0,$V([0,0,0]),$V([12.5,12.5,0]),$V([37,12.5,0]),$V([50,0,0]));
-    
-    console.log(v0.e(1),v0.e(2),v0.e(3));
-    console.log(v1.e(1),v1.e(2),v1.e(3));
-    console.log(v2.e(1),v2.e(2),v2.e(3));
-    console.log(v3.e(1),v3.e(2),v3.e(3));
-    console.log(v4.e(1),v4.e(2),v4.e(3));
-    console.log(v5.e(1),v5.e(2),v5.e(3));
-    console.log(v6.e(1),v6.e(2),v6.e(3));
     
     sphere = createSphere(20,20);
     
-    curve1 = createCurve($V([0,0,0]), $V([3.0,0,0]), 
+curve1 = createCurve($V([0,0,0]), $V([3.0,0,0]), 
     						$V([1.0,0.5,0]), $V([2.0,0.5,0]), 
     						$V([0.0,0.0,1.0]),
     						20, 0.5, 
@@ -187,6 +169,10 @@ $S.preLoop = function () {
     						$V([0.0,0.0,1.0]),
     						20, 0.5, 
     						1.0, 1.0, 0.0, 1.0);
+    						
+    curve4 = createWorldCurveCube(0, 0, 0, 90, 0.5,
+    						20, 0.05, 
+    						0.0, 1.0, 0.0, 1.0);
     
     // Curve Shader
     
@@ -243,7 +229,7 @@ $S.draw = function () {
    
     $S.setActiveShader("curve");
     
-    //sphere.draw();
+    sphere.draw();
     
     // Now draw the bars
     //$S.setActiveShader("curve");
@@ -251,6 +237,7 @@ $S.draw = function () {
     curve1.draw();
     curve2.draw();
     curve3.draw();
+    curve4.draw();
 }    
  
 </script>

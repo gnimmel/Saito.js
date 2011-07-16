@@ -188,9 +188,7 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
    		curveVertexIndices.push( i );
    		curveVertexIndices.push( size - i );
    	}
-   	
-   
-   	
+   		
    	// Bottom Face ( cant be arsed with degenerate at the moment so just add another tri
   	curveVertexIndices.push(halfSize+1);
   	curveVertexIndices.push(0);
@@ -222,4 +220,42 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 
     return curve;
 	
+}
+
+
+// Worked out on a sphere size of 1 with -90 being south pole, centered at the origin
+function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments, w, r,g,b,a) {
+	startlon = degToRad(startlon);
+	endlon = degToRad(endlon);
+	startlat = degToRad(startlat);
+	endlat = degToRad(endlat);
+
+	var sx = Math.cos(startlon) * Math.cos(startlat);
+	var sz = Math.sin(startlon) * Math.cos(startlat);
+	var sy = Math.sin(startlat);
+	
+	console.log(sx,sy,sz);
+
+	var ex = Math.cos(endlon) * Math.cos(endlat);
+	var ez = Math.sin(endlon) * Math.cos(endlat);
+	var ey = Math.sin(endlat);
+	
+	console.log(ex,ey,ez);
+	
+	var s = $V([sx,sy,sz]);
+	var e = $V([ex,ey,ez]);
+	
+	var tx = (sx + ex) / 3.0;
+	var ty = (sy + ey) / 3.0;
+	var tz = (sz + ez) / 3.0;
+	
+	var facing = $V([(sx + ex) / 2.0 , (sy + ey) / 2.0, (sz + ez)  / 2.0]);
+	facing = facing.toUnitVector();
+	
+	var c1 = $V([sx + tx , sy + ty, sz + tz ]);
+	c1 = c1.add ( facing.x(bend) );
+	var c2 = $V([sx + (2 * tx) , sy + (2 * ty), sz + (2 * tz) ]);
+	c2 = c2.add ( facing.x(bend) );
+	
+	return createCurveCube(s, e, c1, c2, facing, segments, w, r,g,b,a);
 }

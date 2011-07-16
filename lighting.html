@@ -45,7 +45,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
-<script type="text/javascript" src="js/s9WebGL.js"></script>
+<script type="text/javascript" src="js/Saito.js"></script>
 
 
 <!-- Main Java Script GL Functions 
@@ -116,11 +116,13 @@ $(function(){
 // ****************************************************
 
 $S.setupResources = function () {
-    $RL.addFragmentShader("shaders/per-fragment-lighting-fs.txt", "perpixelfrag");
-    $RL.addVertexShader("shaders/per-fragment-lighting-vs.txt", "perpixelvert");
+    	$RL.addFragmentShader("shaders/per-fragment-lighting-fs.txt", "perpixelfrag");
+    	$RL.addVertexShader("shaders/per-fragment-lighting-vs.txt", "perpixelvert");
     
-    $RL.addTexture("textures/world_night.gif","worldnight");
-    $RL.addTexture("textures/world.gif","world");
+    	$RL.addTexture("textures/world_night.gif","worldnight");
+    	$RL.addTexture("textures/world.gif","world");
+	$RL.addTextureCube("textures/world_day_cube/cube","worldday_cube");
+
 }
 
 // ****************************************************
@@ -223,7 +225,7 @@ $S.draw = function () {
 
 </head>
 
-<body onload="S9WebGL.initialize()">
+<body onload="Saito.initialize()">
 
      <!-- The Progress Dialog for loading resources -->
     <div id="dialog-modal" title="Loading Resources">

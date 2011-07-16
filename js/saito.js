@@ -33,6 +33,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 var gl;
 
 var DEBUG = false;
+var USEJQUERYUI = true;
 
 // Debug mode does seem to have some side-effects!
 
@@ -128,6 +129,7 @@ Saito.initialize = function(){
     if (!gl) {
         alert("Could not initialise WebGL, sorry :-(");
     }
+ 
 };
 
 Saito.setActiveShader = function(tag) {
@@ -195,9 +197,9 @@ var ResourceLoader = {
     },
     
     // Take the start of a path and add on at least 00 -> 05 for each!
-    // currently, only takes GIFs
+    // takes the given extension
     
-    addTextureCube : function (path, tag) {
+    addTextureCube : function (path, tag, extension) {
 
         var texture = gl.createTexture();
       
@@ -226,7 +228,9 @@ var ResourceLoader = {
                  
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                       
+                    
+			alert(texImages[0]);
+
                     for (var j= 0; j < 6; ++j){
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImages[j]);
                     }
@@ -236,7 +240,7 @@ var ResourceLoader = {
                     
             }
             
-            texImages[i].src = path + "_0" + i + ".gif";
+            texImages[i].src = path + "_0" + i + "." + extension;
 
         }
         
@@ -248,12 +252,16 @@ var ResourceLoader = {
     
     _checkStatus : function() {
         this.nLoaded--;
+	if (USEJQUERYUI){
         $( "#progressbar" ).progressbar({
 		    value: (this.nToLoad - this.nLoaded) / this.nToLoad * 100
         });
+        }
         if (this.nLoaded == 0){
+	  if(USEJQUERYUI){
             $( "#dialog-modal" ).dialog( "close" );
             $( "#progressbar" ).progressbar("destroy");
+          }
         }
     
     },
@@ -283,25 +291,34 @@ var ResourceLoader = {
         // here is where we load the dialog for loading
         
         this.nToLoad = this.nLoaded;
-        
-        $( "#dialog" ).dialog( "destroy" );
+        if(USEJQUERYUI){
+          $( "#dialog" ).dialog( "destroy" );
 
-        $( "#dialog-modal" ).dialog({
+          $( "#dialog-modal" ).dialog({
             height: 110,
             modal: true
-        });
+          });
     
-        $( "#progressbar" ).progressbar({
+          $( "#progressbar" ).progressbar({
 			value: 0
 		});
+          }
     
         $.each(ResourceLoader.resources,function(index,item) {
           
             // cheat for now and assume that if the item is length 3 we are good to go 
             if (item.length == 3){
           
-            // JQUERY HAS NO FAILURE method in its Ajax Class.... fail!
-                $.ajax({
+// Client side fix to stop Firefox parsing non XML data
+// http://stackoverflow.com/questions/335409/jquery-getjson-firefox-3-syntax-error-undefined
+$.ajaxSetup({'beforeSend': function(xhr){
+    if (xhr.overrideMimeType)
+        xhr.overrideMimeType("text/plain");
+    }
+});
+
+
+            $.ajax({
                     url: item[0],
                     success: function(data){
                      
@@ -317,9 +334,13 @@ var ResourceLoader = {
                                 Saito.prototype._allIsLoaded();
                         }else{
                             alert('Data file ' + item[0] + 'was empty!');
-             
                         }     
-                    },
+		}
+                   ,
+		    error: function(){
+		    	alert('Error loading ' + item[0]);
+ 			$( "#dialog-modal" ).dialog( "close" );
+           	    } 
                 
                 });
             }
@@ -910,6 +931,12 @@ function loadModel(path) {
     request.send();
 }
 
+// ****************************************************
+// Utilities
+// ****************************************************
+
+function radToDeg ( val ) { return val * 57.2957795; }
+function degToRad ( val ) { return val * 0.017453292523928; }
 
 
 
