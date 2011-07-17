@@ -33,7 +33,7 @@ function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
   
   	// Direction gives the next point - this is point segment 0 to 1
 
-  	var vert0 = pointOnCurve(0, start, c0,c1, end); // First point
+  	var vert0 = pointOnCurve(0.0, start, c0,c1, end); // First point
   	var vert3 = pointOnCurve(1.0 / segments, start, c0,c1, end);
   	var dir = vert0.subtract(vert3); // Going back
   	var up = dir.cross(alignAxis);
@@ -129,7 +129,7 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 
 	var size = 4;
 	// Front Face
-   	for (var i=2; i < segments; i ++){
+   	for (var i=2; i <= segments; i ++){
 		vert0 = pointOnCurve((i-1)/segments, start, c0,c1,end);
 		vert3 = pointOnCurve(i/segments, start, c0,c1,end);
 		var dir = vert0.subtract(vert3); // Going back
@@ -146,7 +146,7 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
   	 
 	
 	// Back Face
-   	for (var i= segments-1; i >= 0; i--){
+   	for (var i= segments; i >= 0; i--){
 		vert0 = pointOnCurve((i-1)/segments, start, c0,c1,end);
 		vert3 = pointOnCurve(i/segments, start, c0,c1,end);
 		var dir = vert0.subtract(vert3); // Going back
@@ -234,13 +234,13 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 	var sz = Math.sin(startlon) * Math.cos(startlat);
 	var sy = Math.sin(startlat);
 	
-	console.log(sx,sy,sz);
+	//console.log(sx,sy,sz);
 
 	var ex = Math.cos(endlon) * Math.cos(endlat);
 	var ez = Math.sin(endlon) * Math.cos(endlat);
 	var ey = Math.sin(endlat);
 	
-	console.log(ex,ey,ez);
+	//console.log(ex,ey,ez);
 	
 	var s = $V([sx,sy,sz]);
 	var e = $V([ex,ey,ez]);
@@ -257,5 +257,7 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 	var c2 = $V([sx + (2 * tx) , sy + (2 * ty), sz + (2 * tz) ]);
 	c2 = c2.add ( facing.x(bend) );
 	
+	console.log(c2);
+
 	return createCurveCube(s, e, c1, c2, facing, segments, w, r,g,b,a);
 }

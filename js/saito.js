@@ -228,9 +228,7 @@ var ResourceLoader = {
                  
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                    
-			alert(texImages[0]);
-
+     
                     for (var j= 0; j < 6; ++j){
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImages[j]);
                     }
