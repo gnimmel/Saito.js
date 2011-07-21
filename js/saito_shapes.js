@@ -1,6 +1,8 @@
-// ****************************************************
-// Drawing Curves
-// ****************************************************
+/** 
+* Drawing Curves
+*/
+
+///\todo Needs normals to be added!
 
 function B1(t) { return t*t*t }
 function B2(t) { return 3*t*t*(1-t) }
@@ -19,15 +21,15 @@ function pointOnCurve(val,v0,v1,v2,v3) {
 
 function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 
-    var curve = new Primitive;
+	var curve = new Primitive;
    	var alignAxis = facing;
    	var width = w;
 	
 	// Create the Vertices for this curve as a triangle strip facing the 
 	// align axis vector (may need to mess with this in a shader to keep it
 	// facing the viewer (billboarding)
-   
-    gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
+   	
+	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
     
   	var vertices = [];
   
@@ -59,9 +61,9 @@ function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 		vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
 		vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
 	}
-  	   
+ 
     
-    var colors = [];
+	var colors = [];
     
   	for (var i=0; i < segments * 2; i ++){
    		colors.push(r);
@@ -78,22 +80,22 @@ function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
    
  	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    curve.vertexPositionBuffer.itemSize = 3;
-    curve.vertexPositionBuffer.numItems = vertices.length / 3;
+    	curve.vertexPositionBuffer.itemSize = 3;
+    	curve.vertexPositionBuffer.numItems = vertices.length / 3;
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    curve.vertexColorBuffer.itemSize = 4;
-    curve.vertexColorBuffer.numItems = colors.length / 4;
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+	curve.vertexColorBuffer.itemSize = 4;
+	curve.vertexColorBuffer.numItems = colors.length / 4;
     
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
-    curve.vertexIndexBuffer.itemSize = 1;
-    curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
+	curve.vertexIndexBuffer.itemSize = 1;
+	curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
  
 	curve.drawPrimitive = gl.TRIANGLE_STRIP;
-
-    return curve;
+	
+	return curve;
 }
 
 // Create a Square 3D Curve
@@ -260,4 +262,51 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 	console.log(c2);
 
 	return createCurveCube(s, e, c1, c2, facing, segments, w, r,g,b,a);
+}
+
+
+/**
+ * create Plane with a size aligned on the X Axis, size being a 2 size array
+ */
+
+function createPlaneXAxis(size) {
+
+	var plane =  new Primitive();
+
+	// Vertices
+	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexPositionBuffer);
+    
+  	var vertices = [];
+	var vert1 = $V([size[0],0,size[1]]);
+	var vert2 = $V([-size[0],0,size[1]]);
+	var vert3 = $V([-size[0],0,-size[1]]);
+	var vert4 = $V([size[0],0,-size[1]]);
+
+	vertices.push(vert1.e(1)); vertices.push(vert1.e(2)); vertices.push(vert1.e(3));
+	vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
+	vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
+	vertices.push(vert4.e(1)); vertices.push(vert4.e(2)); vertices.push(vert4.e(3));
+	
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+	plane.vertexPositionBuffer.itemSize = 3;
+    	plane.vertexPositionBuffer.numItems = 4;
+
+	// Normals
+	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexNormalBuffer);
+    
+  	var normals = [];
+	var normal = $V([0,1,0]);
+	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
+	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
+	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
+	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
+
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+	plane.vertexNormalBuffer.itemSize = 3;
+    	plane.vertexNormalBuffer.numItems = 4;
+
+
+	return plane;
+
 }

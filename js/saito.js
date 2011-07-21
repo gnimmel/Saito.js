@@ -26,20 +26,25 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
  */
 
-// ****************************************************
-// Globals
-// ****************************************************
+/**
+ *\todo reindent and recomment
+ *\todo shader should be one call with both parts returning a shader object
+ */
 
+/**
+ * Globals
+ */
 var gl;
 
-var DEBUG = false;
+var DEBUG = true;
 var USEJQUERYUI = true;
 
 // Debug mode does seem to have some side-effects!
 
-// ****************************************************
-// S9 Web GL 'Class' that defines everything
-// ****************************************************
+/**
+ * Master Saito Object
+ */
+
 
 var Saito = new Object();
 
@@ -47,154 +52,289 @@ var Saito = new Object();
 
 Saito.prototype = {
 
-	_setupResources : function() {
-	    Saito.setupResources(); // This seems really bad! :P
-	    ResourceLoader._load();
+	_setup : function() {
+		Saito.setup();    
+        	setInterval(Saito.prototype._tick, 15);
+
 	},
-    
-    _allIsLoaded : function() {
-        if (DEBUG){
-            var str = "";
-            for (var key in ResourceLoader.resourceByTag){
-                str += key +  ":" + ResourceLoader.resourceByTag[key] + "\n";
-            }
-            alert(str);  
-        }
-        Saito.preLoop();    
-        setInterval(Saito.prototype._tick, 15);
-    },
-    
-	
+    	
 	_tick : function() {
 	    
-	    var timeNow = new Date().getTime();
-        if (Saito.lastTime  != 0) {
-            Saito.elapsed = timeNow - Saito.lastTime;
-        }
-        Saito.lastTime  = timeNow;
+		var timeNow = new Date().getTime();
+        	if (Saito.lastTime  != 0) {
+			Saito.elapsed = timeNow - Saito.lastTime;
+        	}
+        	Saito.lastTime  = timeNow;
 	
-	    Saito.prototype._update();
-	    Saito.prototype._draw();   
+		Saito.prototype._update();
+		Saito.prototype._draw();  
 	},
 	
 	_update : function () {
-	    Saito.update();
+		Saito.update();
 	    
-	    // Technical these mouse elements may not exist yet
-	    Saito.mouseXprev = Saito.mouseX;
-        Saito.mouseYprev = Saito.mouseY; 
+		// Technical these mouse elements may not exist yet
+		Saito.mouseXprev = Saito.mouseX;
+		Saito.mouseYprev = Saito.mouseY; 
 	},
 	
 	_draw : function() {
-	    Saito.draw();    
+		if (Saito.resources == 0) {
+			Saito.draw();    
+		}
+	},
+
+	_resize: function() {
+		gl.viewportWidth = Saito.width = this.canvas.width;
+        	gl.viewportHeight = Saito.height = this.canvas.height;
+
+		Saito.resize();
 	}
 	
 };
 
+/**
+ * Saito Member Variables 
+ */
+
 Saito.lastTime = 0;	
 Saito.elapsed = 0;
+Saito.width = 0;
+Saito.height = 0;
+Saito.resources = 0;
 
 function throwOnGLError(err, funcName, args) {
-  throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to" + funcName;
+	throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to" + funcName;
 };
 
+/**
+ * Saito Initialise Function
+ */
 
 Saito.initialize = function(){
-    this.canvas = $("#webgl-canvas")[0];	    
+	this.canvas = $("#webgl-canvas")[0];	    
 	    
-    try {
-        if (DEBUG) gl = WebGLDebugUtils.makeDebugContext(this.canvas.getContext("experimental-webgl"));
-        else gl = this.canvas.getContext("experimental-webgl");
+	try {
+        	if (DEBUG) gl = WebGLDebugUtils.makeDebugContext(this.canvas.getContext("experimental-webgl"));
+        	else gl = this.canvas.getContext("experimental-webgl");
         
-        gl.viewportWidth = this.canvas.width;
-        gl.viewportHeight = this.canvas.height;
+        	gl.viewportWidth = Saito.width = this.canvas.width;
+        	gl.viewportHeight = Saito.height = this.canvas.height;
       
-        // Place holder for shaders
-        this.shaders = new Array;
-        this.activeShader = "none";
+               	this.activeShader = "none";
 
-        // Add the mouse handler
-        setMouseHandler();
+  		// Add the mouse handler
+        	setMouseHandler();
 
-       // OpenGL Constants        
-        gl.clearDepth(1.0);
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);
-       
-        this.prototype._setupResources();
-    } catch(e) {
-        alert(e);
-    }
-    
-    if (!gl) {
-        alert("Could not initialise WebGL, sorry :-(");
-    }
+		/// OpenGL Constants \todo remove eventually
+		gl.clearDepth(1.0);
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+       		this.prototype._setup();
+    	} catch(e) {
+        	alert(e);
+    	}
+    	
+	if (!gl) {
+        	alert("Could not initialise WebGL, sorry :-(");
+    	}
  
-};
-
-Saito.setActiveShader = function(tag) {
-    var shader = Saito.shaders[tag];
-    Saito.activeShader = tag;
-    gl.useProgram(shader);
 };
 
 
 var $S = Saito;
 
-// ****************************************************
-// Resource handling
-// ****************************************************
+/**
+ * The Shader Class. Given two filenames, create out shader
+ */
 
-// This handles all external things like shaders, models
-// and textures
+SaitoShader = function(vertpath,fragpath) {
 
+	/// Two sets of JSON Calls to load the required data
+
+	$.ajaxSetup({'beforeSend': function(xhr){
+    		if (xhr.overrideMimeType)
+        		xhr.overrideMimeType("text/plain");
+    		}
+	});
+
+	// Load Vertex Shader
+	Saito.resources++;
+	$.ajax({
+        	url: vertpath,
+		success: function(vertdata){
+			Saito.resources--;
+
+			if (vertdata){
+				if (DEBUG) alert("Loaded " + vertpath + "\n\n");
+				Saito.resources++;
+				
+				
+				$.ajaxSetup({'beforeSend': function(xhr){
+    					if (xhr.overrideMimeType)
+        					xhr.overrideMimeType("text/plain");
+    					}
+				});
+
+				// Load Fragment Shader
+				$.ajax({
+        				url: fragpath,
+					success: function(fragdata){
+						Saito.resources--;
+						if (fragdata){
+							if (DEBUG) alert("Loaded " + fragpath + "\n\n");
+							
+							// Compile up
+							this.vertexShader = gl.createShader(gl.VERTEX_SHADER);
+						 
+							if (this.vertexShader){
+								gl.shaderSource(this.vertexShader, vertdata);
+								gl.compileShader(this.vertexShader);
+
+								if (!gl.getShaderParameter(this.vertexShader, gl.COMPILE_STATUS)) {
+									alert(gl.getShaderInfoLog(this.vertexShader));
+									return;
+								}
+
+							}
+							else{
+								alert("No Shader Object could be created!");
+								return;
+							}
+
+							      
+							this.fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+								 
+							if (this.vertexShader){
+								gl.shaderSource(this.fragmentShader, fragdata);
+								gl.compileShader(this.fragmentShader);
+
+								if (!gl.getShaderParameter(this.fragmentShader, gl.COMPILE_STATUS)) {
+									alert(gl.getShaderInfoLog(this.fragmentShader));
+									return;
+								}
+
+							}
+							else{
+								alert("No Shader Object could be created!");
+								return;
+							}
+
+										
+							this.shaderProgram = gl.createProgram();
+								
+							gl.attachShader(this.shaderProgram, this.vertexShader);
+							gl.attachShader(this.shaderProgram, this.fragmentShader);
+
+							gl.linkProgram(this.shaderProgram);
+
+
+        					}else{ alert('Data file ' + vertpath + 'was empty!'); }
+					}     
+              				,error: function(){ alert('Error loading ' + vertpath); Saito.resources--;} 
+                
+     				});
+      
+
+        		}else{ alert('Data file ' + vertpath + 'was empty!'); }
+		}     
+              	,error: function(){ alert('Error loading ' + vertpath); Saito.resources--; } 
+                
+     	});
+
+}
+
+/**
+ * Set a uniform of 3 floats
+ */
+
+SaitoShader.prototype.setUniform3f = function( name, variable) {
+	var uniform = gl.getUniformLocation(this.shaderProgram, name);
+	gl.uniform3f(uniform,variable[0],variable[1],variable[2]);
+}
+
+
+/**
+ * Set a uniform from a Sylvester Matrix
+ */
+
+SaitoShader.prototype.setUniformSylvesterMatrix = function( name, variable) {
+	var uniform = gl.getUniformLocation(this.shaderProgram, name);	
+	gl.uniformMatrix4fv(uniform, false, new Float32Array(variable.flatten()));
+  
+}
+
+/**
+ * Enable an array with a name. Call these in order
+ */
+
+SaitoShader.prototype.enableAttribArray = function(name) {
+	var position = gl.getAttribLocation(this.shaderProgram, name);
+	gl.enableVertexAttribArray(position);
+}
+
+/**
+ * Grab an attribute location
+ */
+
+SaitoShader.prototype.getAttribArray = function(name) {
+	return gl.getAttribLocation(this.shaderProgram, name);
+}
+
+/**
+ * Set the shader active
+ */ 
+
+SaitoShader.prototype.setActive = function() {
+	gl.useProgram(this.shader);
+}
+
+/**
+ * Set the shader inactive
+ */ 
+
+
+SaitoShader.prototype.setInactive = function() {
+	gl.useProgram("none");
+}
+
+
+/**
+ * The Texture Class
+ */
+
+texture = function(path) {
+	this.texImage = new Image();
+	this.texture = gl.createTexture();
+
+	this.texture.image = this.texImage;
+	this.texImage.src = path;
+
+	Saito.resources++;
+
+	texImage.onload = function() {
+		Saito.resources--;
+        
+            	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            	gl.bindTexture(gl.TEXTURE_2D,this.texture);
+            	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.texture.image);
+            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            	gl.generateMipmap(gl.TEXTURE_2D);
+            	gl.bindTexture(gl.TEXTURE_2D, null);
+    	}
+	
+}
+
+
+/**
+ * Resource handling
+ * This handles all external things like shaders, models
+ * and textures
+ */
+
+/*
 var ResourceLoader = {
-
-    resources : new Array,
-    nLoaded : 0, 
-    resourceByTag: new Array,
-    
-
-	addVertexShader : function (path, tag) {
-	    ResourceLoader._addResource(path,tag,ResourceLoader._addVertexShader);           
-	},
-	
-	addFragmentShader : function (path, tag) {
-	   ResourceLoader._addResource(path,tag,ResourceLoader._addFragmentShader);
-	},
-    
-    addModel : function (path, tag) {
-	    
-	},
-	
-	addTexture : function (path, tag) {
-	    var texImage = new Image();
-
-        var texture = gl.createTexture();
-        texture.image = texImage;
-        texImage.src = path;
-        this.nLoaded++;
-        
-        // SHOULD CHECK FOR RGB / RGBA here!
-        
-        texImage.onload = function() {
-        
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.bindTexture(gl.TEXTURE_2D,texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-         
-            
-            if (tag == undefined) tag = "r" + this.resources.length;
-	        ResourceLoader.resources.push( [texture,tag] );
-	        ResourceLoader.resourceByTag[tag] = texture;
-	        
-	        ResourceLoader._checkStatus();
-        }
-    },
     
     // Take the start of a path and add on at least 00 -> 05 for each!
     // takes the given extension
@@ -265,17 +405,7 @@ var ResourceLoader = {
     },
   
 
-    _addVertexShader : function (response) {
-        if (DEBUG) alert("Compiling Vertex Shader");
-        return compileShader(response,"x-shader/x-vertex");
-    },
-    
-    _addFragmentShader : function (response) {
-        if (DEBUG) alert("Compiling Fragment Shader");
-        return compileShader(response,"x-shader/x-fragment");
-  
-    },
-    
+        
     
 	_addResource: function(path, tag, sfunc){
 	    if (tag == undefined) tag = "r" + this.resources.length;
@@ -350,95 +480,44 @@ $.ajaxSetup({'beforeSend': function(xhr){
         return (this.nLoaded == 0);
     }
        
-};
-
-// Actual 'singleton' for handling things - maybe use a $R ?
-var $R = ResourceLoader.resourceByTag;
-var $RL = ResourceLoader;
+};*/
 
 
-// ****************************************************
-// Shader Functions for loading and compiling
-// ****************************************************
+/**
+ * Matrix Functions
+ * Apparently we don't get these by default? Seems odd!
+ * This gives us our projection and perspective matrices
+ * \todo move to Saito Object
+ */
 
-function compileShader (data, type) {
-
-    if (type == "x-shader/x-fragment") {
-        var shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else if (type == "x-shader/x-vertex") {
-        var shader = gl.createShader(gl.VERTEX_SHADER);
-    } 
-    if (shader){
-        gl.shaderSource(shader, data);
-        gl.compileShader(shader);
-    
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
-            return;
-        }
-        return shader;
-    }
-    else{
-        alert("No Shader Object could be created!");
-    }
-    
-}
-
-
-function createShaders(rvertextag, rfragtag, tag) {
-
-    var shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, $R[rvertextag] );
-    gl.attachShader(shaderProgram, $R[rfragtag] );
-    gl.linkProgram(shaderProgram);
-    
-    // Setting the locations!  Can we do this automagically?
-    // potentially, when we read the shader text we could have "special" comments as 
-    // really its just a text to text link?
-    
-    // add Shader to our internal tracker
-    if (tag == undefined) tag = "s" +  Saito.shaders.length;
-    Saito.shaders[tag] =  shaderProgram;
-    Saito.activeShader = tag;
-    
-    return shaderProgram;
-}
-
-
-// ****************************************************
-// Matrix Stacking and Settings Functions
-// ****************************************************
-
-// Apparently we don't get these by default? Seems odd!
-
-var mvMatrix;
-var mvMatrixStack = [];
+var modelViewMatrix;
+var modelViewMatrixStack = [];
 
 function mvPushMatrix(m) {
     if (m) {
-        mvMatrixStack.push(m.dup());
-        mvMatrix = m.dup();
+        modelViewMatrixStack.push(m.dup());
+        modelViewMatrix = m.dup();
     } else {
-        mvMatrixStack.push(mvMatrix.dup());
+        modelViewMatrixStack.push(modelViewMatrix.dup());
     }
 }
 
 
 function mvPopMatrix() {
-    if (mvMatrixStack.length == 0) {
+    if (modelViewMatrixStack.length == 0) {
         throw "Invalid popMatrix!";
     }
-    mvMatrix = mvMatrixStack.pop();
-    return mvMatrix;
+    modelViewMatrix = modelViewMatrixStack.pop();
+    return modelViewMatrix;
 }
 
 function loadIdentity() {
-    mvMatrix = Matrix.I(4);
+    modelViewMatrix = Matrix.I(4);
 }
 
 
 function multMatrix(m) {
-    mvMatrix = mvMatrix.x(m);
+    modelViewMatrix = modelViewMatrix.x(m);
 }
 
 
@@ -466,41 +545,32 @@ function mvRotate(angle, v) {
     multMatrix(createRotationMatrix(angle, v));
 }
     
-var pMatrix;
+var projectionMatrix;
 function perspective(fovy, aspect, znear, zfar) {
-    pMatrix = makePerspective(fovy, aspect, znear, zfar);
+    projectionMatrix = makePerspective(fovy, aspect, znear, zfar);
 }
 
 // This function takes our OpenGL / Sylvester Matrices and creates something nice a shader can use
-function setMatrixUniforms() {
-    // Grab the Active Shader
-    var shaderProgram = Saito.shaders[Saito.activeShader];
+function setMatrixUniforms(shader) {
+	if (shader != "none"){
+
+		shader.setUniformSylvesterMatrix("uModelViewMatrix", modelViewMatrix);
+		shader.setUniformSylvesterMatrix("uProjectionMatrix", projectionMatrix);
     
-    if (shaderProgram != "none"){
-        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, new Float32Array(pMatrix.flatten()));
-        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, new Float32Array(mvMatrix.flatten()));
-    
-        var normalMatrix = mvMatrix.inverse();
-        normalMatrix = normalMatrix.transpose();
-        gl.uniformMatrix4fv(shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
-        
-        
-        if (shaderProgram.nMatrixUniform != undefined){
-            var normalMatrix = mvMatrix.inverse();
-            normalMatrix = normalMatrix.transpose();
-            gl.uniformMatrix4fv(shaderProgram.nMatrixUniform, false, new Float32Array(normalMatrix.flatten()));
-        }
-    }
+        	var normalMatrix = modelViewMatrix.inverse();
+       	 	normalMatrix = normalMatrix.transpose();
+		shader.setUniformSylvesterMatrix("uNormalMatrix", normalMatrix); 
+	 }
 }
 
 
-// ****************************************************
-// Mouse and Keyboard interaction functions
-// ****************************************************
 
-// This function returns values between -1 and 1 with the origin
-// at the center of the canvas
-
+/**
+ * Mouse and Keyboard Callbacks and functions
+ *
+ * This function returns values between -1 and 1 with the origin
+ * at the center of the canvas
+ */
 
 function setMouseHandler() {
     Saito.mouseX = 0;
@@ -539,53 +609,58 @@ function setMouseHandler() {
    
 }
 
+/**
+ * A primitive. Forms the basis for our items. Primitives need to bind to Shaders as we are using attributes to draw things.
+ * Not sure if we really need attributes but nevermind. 
+ */
 
-// ****************************************************
-// Primitive Models (cubes and spheres and such like)
-// ****************************************************
 
 function Primitive() {
 
     // Create a stack of buffers - we may not use them all
+	this.vertexPositionBuffer       = gl.createBuffer();
+	this.vertexNormalBuffer         = gl.createBuffer();
+	this.vertexTextureCoordBuffer   = gl.createBuffer();
+	this.vertexColorBuffer          = gl.createBuffer();
+	this.vertexIndexBuffer          = gl.createBuffer();
+	this.drawPrimitive		= gl.TRIANGLES;
+	
+	this.draw = function (shader) {
+    		shader.setActive();
+		
+		var aTextureCoord = shader.getAttribArray("aTextureCoord");
+		var aVertexPosition = shader.getAttribArray("aVertexPosition");     
+		var aVertexNormal = shader.getAttribArray("aVertexNormal");     
+		var aVertexColour = shader.getAttribArray("aVertexColour");     
+	     
+	     
+		if (aTextureCoord != -1 && aTextureCoord!= undefined) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
+			gl.vertexAttribPointer(aTextureCoord, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		    
+		if (aVertexPosition!= -1 && aVertexPosition != undefined) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+			gl.vertexAttribPointer(aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		    
+		if (aVertexNormal != -1 && aVertexNormal != undefined) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
+			gl.vertexAttribPointer(aVertexNormal, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		
+		if (aVertexColour != -1 && aVertexColour != undefined) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexColorBuffer);
+			gl.vertexAttribPointer(aVertexColour, this.vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		
+		
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+		setMatrixUniforms(shader);
+		gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
 
-    this.vertexPositionBuffer       = gl.createBuffer();
-    this.vertexNormalBuffer         = gl.createBuffer();
-    this.vertexTextureCoordBuffer   = gl.createBuffer();
-    this.vertexColorBuffer          = gl.createBuffer();
-    this.vertexIndexBuffer          = gl.createBuffer();
-    this.drawPrimitive				= gl.TRIANGLES;
-    
-    this.draw = function () {
-    
-        var shaderProgram = Saito.shaders[Saito.activeShader];
-    
-        if (shaderProgram != "none"){
-    
-            if (shaderProgram.textureCoordAttribute != -1 && shaderProgram.textureCoordAttribute != undefined) {
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
-                gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-            }
-            
-            if (shaderProgram.vertexPositionAttribute != -1 && shaderProgram.vertexPositionAttribute != undefined) {
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-                gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-            }
-            
-            if (shaderProgram.vertexNormalAttribute != -1 && shaderProgram.vertexNormalAttribute != undefined) {
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-                gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-            }
-        
-            if (shaderProgram.vertexColorAttribute != -1 && shaderProgram.vertexColorAttribute != undefined) {
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexColorBuffer);
-                gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, this.vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-            }
-        }
-        
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
-        setMatrixUniforms(shaderProgram);
-        gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
-    }
+		shader.setInactive();
+   	}
 }
 
 function createCuboid(width,height,depth) {

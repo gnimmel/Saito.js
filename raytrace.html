@@ -9,7 +9,7 @@ THE GHOST IN THE CSH
  
 SAITO.JS  v.01
 
-index.html
+raytrace.html
 
 Benjamin Blundell
 
@@ -28,6 +28,8 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
  -->
 
+
+
 <html>
 <head>
 <title>Saito.js</title>
@@ -39,13 +41,13 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 <!-- JS For Additional OpenGL Functions -->
 
-<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.6.2.js"></script>
 <script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/saito.js"></script>
-
+<script type="text/javascript" src="js/saito_shapes.js"></script>
 
 <!-- Main Java Script GL Functions 
 
@@ -57,7 +59,7 @@ models, textures and shaders
 - $R is shorthand for $RL.resourceByTag and allows nice access to each
 resource via their user assigned name
 
-There are 4 functons to override:
+There are 4 functions to override:
     - setupResources - loading anything external here
     - preLoop - Do all your initialization here
     - draw - make your drawing calls here
@@ -69,17 +71,18 @@ There are 4 functons to override:
 // Globals you want to mess with
 
 var sphere;
-var shader;
+var plane;
+var rayShader;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
 
 
-// ****************************************************
-// Setup controls - JQuery related - Not S9WebGL per-se
-// ****************************************************
+/**
+ * Setup controls - JQuery related - Not S9WebGL per-se
+ */
 
-$(function(){
+ $(function(){
     $('#sliderX').slider({
         range: false,
         orientation: "vertical",
@@ -110,50 +113,23 @@ $(function(){
 });
 
 
-// ****************************************************
-// S9 GL Load resources
-// ****************************************************
+/**
+ * Setup Function
+ */
 
-$S.setupResources = function () {
-    $RL.addFragmentShader("shaders/basic-fs.txt", "basicfrag");
-    $RL.addVertexShader("shaders/basic-vs.txt", "basicvert");
+$S.setup = function () {
     
-    $RL.addTexture("textures/world.png","world");
-    $RL.addTexture("textures/world_night.gif","worldnight");
-}
-
-// ****************************************************
-// S9 GL Init Variables and Environment
-// ****************************************************
-
-$S.preLoop = function () {
+	sphere = createSphere(20,20);
+	plane = createPlaneXAxis([40,40]);
+       
+	// Ray Shader
    
-      
-    sphere = createSphere(50,50);
-
-    // create Shader
-    shader = createShaders("basicvert","basicfrag", "basic");
-    
-    // link variables and shader variables 
-    $S.setActiveShader("basic");   
-
-    shader.vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
-    gl.enableVertexAttribArray(shader.vertexPositionAttribute);
-
-    shader.vertexColorAttribute = gl.getAttribLocation(shader, "aVertexColor");
-    gl.enableVertexAttribArray(shader.vertexColorAttribute);
-    
-    shader.textureCoordAttribute = gl.getAttribLocation(shader, "aTextureCoord");
-    gl.enableVertexAttribArray(shader.textureCoordAttribute);
-
-    shader.pMatrixUniform = gl.getUniformLocation(shader, "uPMatrix");
-    shader.mvMatrixUniform = gl.getUniformLocation(shader, "uMVMatrix");
- 
+	rayShader = new SaitoShader("shaders/raytrace-vs.txt", "shaders/raytrace-fs.txt");
 }
 
-// ****************************************************
-// S9 GL Update GL
-// ****************************************************
+/**
+ * Saito Update GL
+ */
 
 $S.update = function () {
     if ($S.mouseDown){
@@ -162,31 +138,32 @@ $S.update = function () {
     } 
 } 
 
-// ****************************************************
-// S9 GL Drawing
-// ****************************************************
+/**
+ * Saito Drawing
+ */
 
 $S.draw = function () {
-    
-    gl.clearColor(0.95, 0.95, 0.95, 1.0);
-    gl.clearDepth(1.0);
-    
-    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-    loadIdentity();
+	gl.clearColor(0.05, 0.05, 0.05, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	loadIdentity();  
+
+	// Draw the world first.
+
+	mvTranslate([0.0, 0.0, -10.0]);
+
+	mvScale([zoom,zoom,zoom]);
     
-    mvTranslate([0.0, 0.0, -10.0]);
-   
-    mvScale([zoom,zoom,zoom]);
-    
-    mvRotate(rotateX,[1.0,0.0,0.0]); 
-    mvRotate(rotateY,[0.0,1.0,0.0]);  
-    
-    gl.bindTexture(gl.TEXTURE_2D, $R["worldnight"]);
-    
-    sphere.draw();
+ 	mvRotate(rotateX,[1.0,0.0,0.0]); 
+ 	mvRotate(rotateY,[0.0,1.0,0.0]);  
+	      
+	sphere.draw(rayShader);
+	plane.draw(rayShader);
 }    
  
 </script>
@@ -194,13 +171,14 @@ $S.draw = function () {
 
 </head>
 
-<body onload="S9WebGL.initialize()">
-
-     <!-- The Progress Dialog for loading resources -->
+<body onload="Saito.initialize()">
+    
+    <!-- The Progress Dialog for loading resources -->
     <div id="dialog-modal" title="Loading Resources">
 	    <div id="progressbar"></div>
     </div>
 
+    
     <div class="container_16" id="mainLayout">
         <div class="grid_3">&nbsp;</div>
         <div class="grid_10">
@@ -235,7 +213,16 @@ $S.draw = function () {
            
            </div>
         </div>
+        <div class="clear"></div>
+        <div class="grid_3">&nbsp;</div>
+        <div class="grid_10">
+            <p><a href="http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">The official
+            WebGL Page</a> will tell you how to get WebGL Enabled for your browser. In Safari, the easiest
+            thing to do is <a href="http://nightly.webkit.org/">download webkit nightly build</a> and run <pre>defaults write com.apple.Safari WebKitWebGLEnabled -bool YES</pre>
+            in a terminal.</p>
+        
     </div>
 </body>
 
 </html>
+
