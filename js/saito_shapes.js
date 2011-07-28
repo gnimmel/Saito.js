@@ -306,7 +306,18 @@ function createPlaneXAxis(size) {
 	plane.vertexNormalBuffer.itemSize = 3;
     	plane.vertexNormalBuffer.numItems = 4;
 
+	var indexData = [];
+	indexData.push(0);
+	indexData.push(1);
+	indexData.push(2);
+	indexData.push(3);
 
+
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.vertexIndexBuffer);
+    	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);
+    	plane.vertexIndexBuffer.itemSize = 1;
+    	plane.vertexIndexBuffer.numItems = indexData.length;
+    
 	return plane;
 
 }

@@ -145,7 +145,7 @@ Saito.initialize = function(){
 var $S = Saito;
 
 /**
- * The Shader Class. Given two filenames, create out shader
+ * The Shader Class. Given two filenames, create our shader
  */
 
 SaitoShader = function(vertpath,fragpath) {
@@ -157,6 +157,8 @@ SaitoShader = function(vertpath,fragpath) {
         		xhr.overrideMimeType("text/plain");
     		}
 	});
+
+	var object = this;
 
 	// Load Vertex Shader
 	Saito.resources++;
@@ -185,14 +187,14 @@ SaitoShader = function(vertpath,fragpath) {
 							if (DEBUG) alert("Loaded " + fragpath + "\n\n");
 							
 							// Compile up
-							this.vertexShader = gl.createShader(gl.VERTEX_SHADER);
+							object.vertexShader = gl.createShader(gl.VERTEX_SHADER);
 						 
-							if (this.vertexShader){
-								gl.shaderSource(this.vertexShader, vertdata);
-								gl.compileShader(this.vertexShader);
+							if (object.vertexShader){
+								gl.shaderSource(object.vertexShader, vertdata);
+								gl.compileShader(object.vertexShader);
 
-								if (!gl.getShaderParameter(this.vertexShader, gl.COMPILE_STATUS)) {
-									alert(gl.getShaderInfoLog(this.vertexShader));
+								if (!gl.getShaderParameter(object.vertexShader, gl.COMPILE_STATUS)) {
+									alert(gl.getShaderInfoLog(object.vertexShader));
 									return;
 								}
 
@@ -203,14 +205,14 @@ SaitoShader = function(vertpath,fragpath) {
 							}
 
 							      
-							this.fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+							object.fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
 								 
-							if (this.vertexShader){
-								gl.shaderSource(this.fragmentShader, fragdata);
-								gl.compileShader(this.fragmentShader);
+							if (object.vertexShader){
+								gl.shaderSource(object.fragmentShader, fragdata);
+								gl.compileShader(object.fragmentShader);
 
-								if (!gl.getShaderParameter(this.fragmentShader, gl.COMPILE_STATUS)) {
-									alert(gl.getShaderInfoLog(this.fragmentShader));
+								if (!gl.getShaderParameter(object.fragmentShader, gl.COMPILE_STATUS)) {
+									alert(gl.getShaderInfoLog(object.fragmentShader));
 									return;
 								}
 
@@ -221,12 +223,12 @@ SaitoShader = function(vertpath,fragpath) {
 							}
 
 										
-							this.shaderProgram = gl.createProgram();
+							object.shaderProgram = gl.createProgram();
 								
-							gl.attachShader(this.shaderProgram, this.vertexShader);
-							gl.attachShader(this.shaderProgram, this.fragmentShader);
+							gl.attachShader(object.shaderProgram, object.vertexShader);
+							gl.attachShader(object.shaderProgram, object.fragmentShader);
 
-							gl.linkProgram(this.shaderProgram);
+							gl.linkProgram(object.shaderProgram);
 
 
         					}else{ alert('Data file ' + vertpath + 'was empty!'); }
@@ -249,8 +251,10 @@ SaitoShader = function(vertpath,fragpath) {
  */
 
 SaitoShader.prototype.setUniform3f = function( name, variable) {
-	var uniform = gl.getUniformLocation(this.shaderProgram, name);
-	gl.uniform3f(uniform,variable[0],variable[1],variable[2]);
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);
+		gl.uniform3f(uniform,variable[0],variable[1],variable[2]);
+	}
 }
 
 
@@ -259,9 +263,10 @@ SaitoShader.prototype.setUniform3f = function( name, variable) {
  */
 
 SaitoShader.prototype.setUniformSylvesterMatrix = function( name, variable) {
-	var uniform = gl.getUniformLocation(this.shaderProgram, name);	
-	gl.uniformMatrix4fv(uniform, false, new Float32Array(variable.flatten()));
-  
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);	
+		gl.uniformMatrix4fv(uniform, false, new Float32Array(variable.flatten()));
+ 	}
 }
 
 /**
@@ -269,8 +274,10 @@ SaitoShader.prototype.setUniformSylvesterMatrix = function( name, variable) {
  */
 
 SaitoShader.prototype.enableAttribArray = function(name) {
-	var position = gl.getAttribLocation(this.shaderProgram, name);
-	gl.enableVertexAttribArray(position);
+	if (this.shaderProgram != undefined){
+		var position = gl.getAttribLocation(this.shaderProgram, name);
+		gl.enableVertexAttribArray(position);
+	}
 }
 
 /**
@@ -278,7 +285,9 @@ SaitoShader.prototype.enableAttribArray = function(name) {
  */
 
 SaitoShader.prototype.getAttribArray = function(name) {
-	return gl.getAttribLocation(this.shaderProgram, name);
+	if (this.shaderProgram != undefined){
+		return gl.getAttribLocation(this.shaderProgram, name);
+	}
 }
 
 /**
@@ -286,7 +295,9 @@ SaitoShader.prototype.getAttribArray = function(name) {
  */ 
 
 SaitoShader.prototype.setActive = function() {
-	gl.useProgram(this.shader);
+	if (this.shaderProgram != undefined){
+		gl.useProgram(this.shaderProgram);
+	}
 }
 
 /**
@@ -295,7 +306,7 @@ SaitoShader.prototype.setActive = function() {
 
 
 SaitoShader.prototype.setInactive = function() {
-	gl.useProgram("none");
+//	gl.useProgram(0);
 }
 
 
@@ -625,9 +636,15 @@ function Primitive() {
 	this.vertexIndexBuffer          = gl.createBuffer();
 	this.drawPrimitive		= gl.TRIANGLES;
 	
+
+
+
 	this.draw = function (shader) {
     		shader.setActive();
 		
+		/// \todo Bind Buffers - This really should be done just once but its nice to have it here now. 
+		/// \todo The Attribs are set here which isn't good as it needs to be the same in the shader
+					
 		var aTextureCoord = shader.getAttribArray("aTextureCoord");
 		var aVertexPosition = shader.getAttribArray("aVertexPosition");     
 		var aVertexNormal = shader.getAttribArray("aVertexNormal");     
@@ -635,31 +652,36 @@ function Primitive() {
 	     
 	     
 		if (aTextureCoord != -1 && aTextureCoord!= undefined) {
+			gl.enableVertexAttribArray(aTextureCoord);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
 			gl.vertexAttribPointer(aTextureCoord, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
+		} 
 		    
-		if (aVertexPosition!= -1 && aVertexPosition != undefined) {
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-			gl.vertexAttribPointer(aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
-		    
+			    
 		if (aVertexNormal != -1 && aVertexNormal != undefined) {
+			gl.enableVertexAttribArray(aVertexNormal);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
 			gl.vertexAttribPointer(aVertexNormal, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
 		
 		if (aVertexColour != -1 && aVertexColour != undefined) {
+			gl.enableVertexAttribArray(aVertexColour);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexColorBuffer);
 			gl.vertexAttribPointer(aVertexColour, this.vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
-		
-		
+
+		if (aVertexPosition!= -1 && aVertexPosition != undefined) {
+			gl.enableVertexAttribArray(aVertexPosition);
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+			gl.vertexAttribPointer(aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+
+
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 		setMatrixUniforms(shader);
 		gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
 
-		shader.setInactive();
+		//shader.setInactive();
    	}
 }
 
@@ -932,9 +954,9 @@ function createSphere(latitudeBands,longitudeBands) {
 
 }
 
-// ****************************************************
-// Model Loading functions.
-// ****************************************************
+/**
+ *  Model Loading functions.
+ */
 
 // A model is essentially a class with its own buffer objects
 // doesnt differ much from a primitive but it will probably!

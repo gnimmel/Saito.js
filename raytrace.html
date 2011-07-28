@@ -7,7 +7,7 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.01
+SAITO.JS  v.02
 
 raytrace.html
 
@@ -52,18 +52,6 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <!-- Main Java Script GL Functions 
 
 - $S is the main Section9 WebGL Class instance that has master control
-
-- $RL is the resource loader instance that controls all resources like
-models, textures and shaders
-
-- $R is shorthand for $RL.resourceByTag and allows nice access to each
-resource via their user assigned name
-
-There are 4 functions to override:
-    - setupResources - loading anything external here
-    - preLoop - Do all your initialization here
-    - draw - make your drawing calls here
-    - update - Update the state of your program here
 
 -->
 <script type="text/javascript">
@@ -123,7 +111,6 @@ $S.setup = function () {
 	plane = createPlaneXAxis([40,40]);
        
 	// Ray Shader
-   
 	rayShader = new SaitoShader("shaders/raytrace-vs.txt", "shaders/raytrace-fs.txt");
 }
 
@@ -144,26 +131,24 @@ $S.update = function () {
 
 $S.draw = function () {
 
-	gl.clearColor(0.05, 0.05, 0.05, 1.0);
+	gl.clearColor(0.15, 0.15, 0.20, 1.0);
 	gl.clearDepth(1.0);
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 1.0, 100.0);
 	loadIdentity();  
 
 	// Draw the world first.
 
 	mvTranslate([0.0, 0.0, -10.0]);
-
 	mvScale([zoom,zoom,zoom]);
-    
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
  	mvRotate(rotateY,[0.0,1.0,0.0]);  
 	      
 	sphere.draw(rayShader);
-	plane.draw(rayShader);
+//	plane.draw(rayShader);
 }    
  
 </script>
