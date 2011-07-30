@@ -63,11 +63,14 @@ var sphere;
 var worldShader;
 var basicShader;
 var cubemapShader;
+var curveShader;
 var textureCube;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
 var curves = new Array();
+var test = true;
+var testcurve;
 
 
 /**
@@ -139,8 +142,14 @@ $S.setup = function () {
 	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
 	basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
 	cubemapShader = new SaitoShader("shaders/cubemap-vs.txt", "shaders/cubemap-fs.txt");
+	curveShader = new SaitoShader("shaders/curve-vs.txt", "shaders/curve-fs.txt");
 	
-	grabFeeds();
+	if (test == false) {
+		grabFeeds()
+	}
+	else {
+		testcurve =  createWorldCurveCube(51, 0, 39.0, 116.0 ,0.5,20,0.01,0.0,1.0,0.0,1.0)
+	}
 
 	// Load the Cubemap
 	textureCube = new SaitoTextureCube("textures/world_day_cube/cube","gif");
@@ -205,12 +214,14 @@ $S.draw = function () {
 
 	// Now draw the curves but rotate and translate so they match the sphere
 	mvPushMatrix();	
-	mvRotate(-90.0, [0.0,1.0,0.0]);
-    
-	for (var i=0; i < curves.length; i++){
-		curves[i].draw(basicShader);
+	if (test == false){
+		for (var i=0; i < curves.length; i++){
+			curves[i].draw(basicShader);
+		}
 	}
-
+	else {
+		testcurve.draw(curveShader);
+	}
 
 	mvPopMatrix();
 
