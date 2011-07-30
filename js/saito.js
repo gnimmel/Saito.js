@@ -39,6 +39,7 @@ var gl;
 
 var DEBUG = false;
 var USEJQUERYUI = true;
+var FULLSCREEN = true;
 
 // Debug mode does seem to have some side-effects!
 
@@ -85,12 +86,24 @@ Saito.prototype = {
 		}
 	},
 
-	_resize: function() {
-		gl.viewportWidth = Saito.width = this.canvas.width;
-        	gl.viewportHeight = Saito.height = this.canvas.height;
+	_resize: function(width,height) {
+		if (Saito.resize != undefined) { Saito.resize(width,height); }
+		if (FULLSCREEN) {
+			Saito.canvas.width = width;
+			Saito.canvas.height = height;
+		}
+		gl.viewportWidth = Saito.canvas.width;
+        	gl.viewportHeight = Saito.canvas.height;
+	},
 
-		Saito.resize();
+	getWidth : function () {
+		return Saito.canvas.width;
+	},
+
+	getHeight : function () {
+		return Saito.canvas.height;
 	}
+
 	
 };
 
@@ -100,8 +113,6 @@ Saito.prototype = {
 
 Saito.lastTime = 0;	
 Saito.elapsed = 0;
-Saito.width = 0;
-Saito.height = 0;
 Saito.resources = 0;
 
 function throwOnGLError(err, funcName, args) {
@@ -114,7 +125,6 @@ function throwOnGLError(err, funcName, args) {
 
 Saito.initialize = function(){
 	this.canvas = $("#webgl-canvas")[0];	    
-	    
 	try {
         	if (DEBUG) gl = WebGLDebugUtils.makeDebugContext(this.canvas.getContext("experimental-webgl"));
         	else gl = this.canvas.getContext("experimental-webgl");
@@ -131,19 +141,27 @@ Saito.initialize = function(){
 		gl.clearDepth(1.0);
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
-       		this.prototype._setup();
+       		this.prototype._setup();		
+
     	} catch(e) {
         	alert(e);
     	}
     	
 	if (!gl) {
         	alert("Could not initialise WebGL, sorry :-(");
-    	}
- 
+    	}else if (FULLSCREEN){
+		Saito.prototype._resize($(window).width(), $(window).height());
+	}
+
 };
 
 
 var $S = Saito;
+
+$(window).resize(function() {
+	Saito.prototype._resize($(window).width(), $(window).height());
+});
+
 
 /**
  * The Shader Class. Given two filenames, create our shader
@@ -565,7 +583,17 @@ function setMouseHandler() {
     
     $(Saito.canvas).mouseup ( function () {
         Saito.mouseDown = false;         
-    });   
+    });  
+
+	// Relies on the mousewheel jquery addon
+	$(Saito.canvas).mousewheel(function(event, delta){
+       		if (delta > 0){
+			if (Saito.mouseScrollUp != undefined) { Saito.mouseScrollUp(); }
+		} 
+		else if (delta < 0){
+			if (Saito.mouseScrollDown != undefined) { Saito.mouseScrollDown(); }
+		}        
+	});  
    
 }
 
