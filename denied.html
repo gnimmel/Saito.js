@@ -116,7 +116,7 @@ function grabFeeds() {
         var countries = data['entries'];
 	for (var i=0; i < countries.length; i++){
 		country = countries[i];
-		curves.add( createWorldCurveCube(50,0,country['lat'],country['lon'],0.05,20,0.01,0.0,1.0,0.0,1.0));
+		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.05,20,0.01,0.0,1.0,0.0,1.0));
 	}
     });
 	
