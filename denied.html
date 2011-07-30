@@ -7,7 +7,7 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.01
+SAITO.JS  v.02
 
 denied.html
 
@@ -49,21 +49,10 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/saito.js"></script>
 <script type="text/javascript" src="js/saito_shapes.js"></script>
 
+
 <!-- Main Java Script GL Functions 
 
 - $S is the main Section9 WebGL Class instance that has master control
-
-- $RL is the resource loader instance that controls all resources like
-models, textures and shaders
-
-- $R is shorthand for $RL.resourceByTag and allows nice access to each
-resource via their user assigned name
-
-There are 4 functions to override:
-    - setupResources - loading anything external here
-    - preLoop - Do all your initialization here
-    - draw - make your drawing calls here
-    - update - Update the state of your program here
 
 -->
 <script type="text/javascript">
@@ -76,9 +65,12 @@ var locationCoords = {};
 var locationHeights = {};
 var worldShader;
 var basicShader;
+var cubemapShader;
+var textureCube;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
+var curve4;
 
 
 /**
@@ -140,101 +132,34 @@ function grabFeeds() {
     });
 }
 
-// http://www.casa.ucl.ac.uk/tom/ajax-live/liveLocation.json
 
 /**
  * Saito Load resources
  */
 
 
-$S.setupResources = function () {
+
+$S.setup = function () {
     
-    	$RL.addFragmentShader("shaders/curve-fs.txt", "curvefrag");
-    	$RL.addVertexShader("shaders/curve-vs.txt", "curvevert");
-    	$RL.addFragmentShader("shaders/world-fs.txt", "worldfrag");
-    	$RL.addVertexShader("shaders/world-vs.txt", "worldvert");
- 
-	$RL.addTextureCube("textures/world_day_cube_small/cube","worldday_cube","gif");
+	sphere = createSphere(40,40);
 
-	grabFeeds();
-}
-
-/**
- * Saito Init Variables and Environment
- */
-
-
-$S.preLoop = function () {
-    
-	sphere = createSphere(20,20);
-
-    						
 	curve4 = createWorldCurveCube(50, 0, 90, 0, 0.05,
-    						20, 0.01, 
-    						0.0, 1.0, 0.0, 1.0);
+    					20, 0.01, 
+    					0.0, 1.0, 0.0, 1.0);
     
+       
+	// Ray Shader
+	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
+	basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
+	cubemapShader = new SaitoShader("shaders/cubemap-vs.txt", "shaders/cubemap-fs.txt");
 	
-	// World Shader
-         
-        worldShader = createShaders("worldvert", "worldfrag", "world");
-	
-	$S.setActiveShader("world");
-	worldShader.vertexPositionAttribute = gl.getAttribLocation(worldShader, "aVertexPosition");
-	gl.enableVertexAttribArray(worldShader.vertexPositionAttribute);
+	//grabFeeds();
 
-	worldShader.vertexNormalAttribute = gl.getAttribLocation(worldShader, "aVertexNormal");
-	// Below line causes issues in firefox apparently! ><
-	gl.enableVertexAttribArray(worldShader.vertexNormalAttribute);
-
-	worldShader.textureCoordAttribute = gl.getAttribLocation(worldShader, "aTextureCoord");
-	gl.enableVertexAttribArray(worldShader.textureCoordAttribute);
-
-	worldShader.pMatrixUniform   = gl.getUniformLocation(worldShader, "uPMatrix");
-	worldShader.mvMatrixUniform  = gl.getUniformLocation(worldShader, "uMVMatrix");
-	worldShader.nMatrixUniform   = gl.getUniformLocation(worldShader, "uNMatrix");
-	worldShader.samplerUniform   = gl.getUniformLocation(worldShader, "uSampler");
-
-	worldShader.materialAmbientColorUniform  = gl.getUniformLocation(worldShader, "uMaterialAmbientColor");
-	worldShader.materialDiffuseColorUniform  = gl.getUniformLocation(worldShader, "uMaterialDiffuseColor");
-	worldShader.materialSpecularColorUniform = gl.getUniformLocation(worldShader, "uMaterialSpecularColor");
-	worldShader.materialShininessUniform     = gl.getUniformLocation(worldShader, "uMaterialShininess");
-	worldShader.materialEmissiveColorUniform = gl.getUniformLocation(worldShader, "uMaterialEmissiveColor");
-	worldShader.ambientLightingColorUniform  = gl.getUniformLocation(worldShader, "uAmbientLightingColor");
-	worldShader.pointLightingLocationUniform = gl.getUniformLocation(worldShader, "uPointLightingLocation");
-	worldShader.pointLightingSpecularColorUniform    = gl.getUniformLocation(worldShader, "uPointLightingSpecularColor");
-	worldShader.pointLightingDiffuseColorUniform     = gl.getUniformLocation(worldShader, "uPointLightingDiffuseColor");
-
-	// Fixed variables for now
-
-	gl.uniform3f(worldShader.ambientLightingColorUniform, 0.2, 0.2, 0.2);
-	gl.uniform3f(worldShader.pointLightingLocationUniform, 0, 5, 10);
-	gl.uniform3f(worldShader.pointLightingDiffuseColorUniform, 0.5, 0.5, 0.5);
-	gl.uniform3f(worldShader.pointLightingSpecularColorUniform, 0.5, 0.5, 0.5);
-
-	gl.uniform3f(worldShader.materialAmbientColorUniform, 1.0, 1.0, 1.0);
-	gl.uniform3f(worldShader.materialDiffuseColorUniform, 1.0, 1.0, 1.0);
-	gl.uniform3f(worldShader.materialSpecularColorUniform, 1.5, 1.5, 1.5);
-	gl.uniform1f(worldShader.materialShininessUniform, 10);
-	gl.uniform3f(worldShader.materialEmissiveColorUniform, 0.5, 0.5, 0.5);
-
-
-	// Curve Shader
-    
-	// create Shader
-	curveShader = createShaders("curvevert","curvefrag", "curve");
-	$S.setActiveShader("curve");
-
-	curveShader.vertexPositionAttribute = gl.getAttribLocation(curveShader, "aVertexPosition");
-	gl.enableVertexAttribArray(curveShader.vertexPositionAttribute);
-
-	curveShader.vertexColorAttribute = gl.getAttribLocation(curveShader, "aVertexColor");
-	gl.enableVertexAttribArray(curveShader.vertexColorAttribute);
-
-	curveShader.pMatrixUniform   = gl.getUniformLocation(curveShader, "uPMatrix");
-	curveShader.mvMatrixUniform  = gl.getUniformLocation(curveShader, "uMVMatrix");
-
-         
+	// Load the Cubemap
+	textureCube = new SaitoTextureCube("textures/world_day_cube/cube","gif");
 }
+
+
 
 /**
  * Saito Update GL
@@ -259,7 +184,7 @@ $S.draw = function () {
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 1.0, 100.0);
 	loadIdentity();  
 
 	// Draw the world first.
@@ -270,21 +195,33 @@ $S.draw = function () {
     
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
  	mvRotate(rotateY,[0.0,1.0,0.0]);  
-	   
- 	$S.setActiveShader("world");
-    
-	gl.bindTexture(gl.TEXTURE_CUBE_MAP, $R["worldday_cube"]);
+	  
+	worldShader.setActive();
+	worldShader.setUniform3f(" uMaterialAmbientColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialDifffuseColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialSpecularColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialEmissiveColor", [1.0,1.0,1.0] );
+	worldShader.setUniform1f(" uMaterialShininess", 1.0 );
 
-	sphere.draw();
+	worldShader.setUniform3f(" uAmbientLightingColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uPointLightingLocation", [1.0,1.0,-10.0] );
+	worldShader.setUniform3f(" uPointLightingDiffuseColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uPointLightingSpecularColor", [1.0,1.0,1.0] );
+	worldShader.setUniform1i(" uSampler", 0);
+
+
+    	textureCube.bind();
+	sphere.draw(cubemapShader);
+	textureCube.unbind();
+	worldShader.setInactive();
     
+
 	// Now draw the curves but rotate and translate so they match the sphere
-	mvPushMatrix();	
-	mvRotate(-90.0, [0.0,1.0,0.0]);
-
-	$S.setActiveShader("curve");
+//	mvPushMatrix();	
+//	mvRotate(-90.0, [0.0,1.0,0.0]);
     
-	curve4.draw();
-	mvPopMatrix();
+//	curve4.draw(basicShader);
+//	mvPopMatrix();
 
 }    
  

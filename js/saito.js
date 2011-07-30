@@ -7,7 +7,7 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.01
+SAITO.JS  v.02
 
 Benjamin Blundell
 
@@ -27,8 +27,9 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  */
 
 /**
- *\todo reindent and recomment
- *\todo shader should be one call with both parts returning a shader object
+ * \todo reindent and recomment
+ * \todo fix the model loading
+ * \todo handle the matrix funtions for setting up defaults
  */
 
 /**
@@ -36,7 +37,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  */
 var gl;
 
-var DEBUG = true;
+var DEBUG = false;
 var USEJQUERYUI = true;
 
 // Debug mode does seem to have some side-effects!
@@ -258,6 +259,32 @@ SaitoShader.prototype.setUniform3f = function( name, variable) {
 }
 
 
+
+/**
+ * Set a uniform of 1 float
+ */
+
+SaitoShader.prototype.setUniform1f = function( name, variable) {
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);
+		gl.uniform1f(uniform,variable);
+	}
+}
+
+/**
+ * Set a uniform of 1 integer */
+
+SaitoShader.prototype.setUniform1i = function( name, variable) {
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);
+		gl.uniform1i(uniform,variable);
+	}
+}
+
+
+
+
+
 /**
  * Set a uniform from a Sylvester Matrix
  */
@@ -306,7 +333,7 @@ SaitoShader.prototype.setActive = function() {
 
 
 SaitoShader.prototype.setInactive = function() {
-//	gl.useProgram(0);
+	gl.useProgram(null);
 }
 
 
@@ -314,7 +341,7 @@ SaitoShader.prototype.setInactive = function() {
  * The Texture Class
  */
 
-texture = function(path) {
+SaitoTexture = function(path) {
 	this.texImage = new Image();
 	this.texture = gl.createTexture();
 
@@ -322,13 +349,14 @@ texture = function(path) {
 	this.texImage.src = path;
 
 	Saito.resources++;
-
+	var obj = this;
+	
 	texImage.onload = function() {
 		Saito.resources--;
         
             	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            	gl.bindTexture(gl.TEXTURE_2D,this.texture);
-            	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.texture.image);
+            	gl.bindTexture(gl.TEXTURE_2D,obj.texture);
+            	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texture.image);
             	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
             	gl.generateMipmap(gl.TEXTURE_2D);
@@ -337,161 +365,82 @@ texture = function(path) {
 	
 }
 
-
 /**
- * Resource handling
- * This handles all external things like shaders, models
- * and textures
+ * Bind Texture2D
  */
 
-/*
-var ResourceLoader = {
-    
-    // Take the start of a path and add on at least 00 -> 05 for each!
-    // takes the given extension
-    
-    addTextureCube : function (path, tag, extension) {
+SaitoTexture.prototype.bind = function() {
+	gl.bindTexture(gl.TEXTURE_2D, this.texture);
+}
 
-        var texture = gl.createTexture();
+
+SaitoTexture.prototype.unbind = function() {
+	gl.bindTexture(gl.TEXTURE_2D, null);
+}	
+
+
+
+/**
+ * The Texture Cube Class
+ * Takes a path, then adds a number with an underscore from 0 to 5, then an extension
+ * security.fileuri.strict_origin_policy needs to be off in Firefox for local files
+ * \todo formats of images not always RGBA
+ */
+
+
+SaitoTextureCube = function (path, extension) {
+
+
+	this.texture = gl.createTexture();
+        this.texImages = new Array();
+        this.loadedTextures = 0;
       
-        var texImages = new Array();
-        
-        var loadedTextures = 0;
-      
-        for (var i= 0; i < 6; ++i){
-      
-            texImages[i] = new Image();
-            this.nLoaded++;
-          
-            texImages[i].cubeID = i;
-                    
-            texImages[i].onload = function() {
-                
-                loadedTextures ++;
-                ResourceLoader._checkStatus();
-                
-                if (loadedTextures == 6){
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                    gl.bindTexture(gl.TEXTURE_CUBE_MAP,texture);
-                    
-                 
-                    // Could really do with some mipmapping I think
-                 
-                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	for (var i= 0; i < 6; ++i){
+      		this.texImages[i] = new Image();
+		Saito.resources++;
+		this.texImages[i].cubeID = i;
+		var obj = this;
      
-                    for (var j= 0; j < 6; ++j){
-                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texImages[j]);
-                    }
+		this.texImages[i].onload = function() {
+			obj.loadedTextures++;
+			Saito.resources--;
+                	if (obj.loadedTextures == 6){
+                    		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                    		gl.bindTexture(gl.TEXTURE_CUBE_MAP,obj.texture);
+                    	
+                             	// Could really do with some mipmapping I think
+                 
+                    		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+     
+                    		for (var j= 0; j < 6; ++j){
+                        		gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texImages[j]);
+                    		}
                     
-                    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-                }
+                    		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+                	}
                     
-            }
+            	}
             
-            texImages[i].src = path + "_0" + i + "." + extension;
+            	this.texImages[i].src = path + "_0" + i + "." + extension;
+	}
 
-        }
-        
-        if (tag == undefined) tag = "r" + this.resources.length;
-        ResourceLoader.resources.push( [texture,tag] );
-        ResourceLoader.resourceByTag[tag] = texture;
-            
-    },
-    
-    _checkStatus : function() {
-        this.nLoaded--;
-	if (USEJQUERYUI){
-        $( "#progressbar" ).progressbar({
-		    value: (this.nToLoad - this.nLoaded) / this.nToLoad * 100
-        });
-        }
-        if (this.nLoaded == 0){
-	  if(USEJQUERYUI){
-            $( "#dialog-modal" ).dialog( "close" );
-            $( "#progressbar" ).progressbar("destroy");
-          }
-        }
-    
-    },
-  
+}
 
-        
-    
-	_addResource: function(path, tag, sfunc){
-	    if (tag == undefined) tag = "r" + this.resources.length;
-	    this.resources.push( [path,tag,sfunc] );
-	    this.nLoaded++; 
-    },
-    
-    _load : function () {
-    
-        // Only make AJAX Calls for things that aren't images
-        // here is where we load the dialog for loading
-        
-        this.nToLoad = this.nLoaded;
-        if(USEJQUERYUI){
-          $( "#dialog" ).dialog( "destroy" );
+/**
+ * Bind Texture Cube
+ */
 
-          $( "#dialog-modal" ).dialog({
-            height: 110,
-            modal: true
-          });
-    
-          $( "#progressbar" ).progressbar({
-			value: 0
-		});
-          }
-    
-        $.each(ResourceLoader.resources,function(index,item) {
-          
-            // cheat for now and assume that if the item is length 3 we are good to go 
-            if (item.length == 3){
-          
-// Client side fix to stop Firefox parsing non XML data
-// http://stackoverflow.com/questions/335409/jquery-getjson-firefox-3-syntax-error-undefined
-$.ajaxSetup({'beforeSend': function(xhr){
-    if (xhr.overrideMimeType)
-        xhr.overrideMimeType("text/plain");
-    }
-});
+SaitoTextureCube.prototype.bind = function() {
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
+}
 
+SaitoTextureCube.prototype.unbind = function() {
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+}
 
-            $.ajax({
-                    url: item[0],
-                    success: function(data){
-                     
-                        if (data){
-                            if (DEBUG) alert("Loaded " + item[0] + "\n\n");
-                            ResourceLoader._checkStatus();
-    
-                            var ro = item[2](data);
-                           
-                            ResourceLoader.resourceByTag[item[1]] = ro;
-                            
-                            if (ResourceLoader.nLoaded == 0)
-                                Saito.prototype._allIsLoaded();
-                        }else{
-                            alert('Data file ' + item[0] + 'was empty!');
-                        }     
-		}
-                   ,
-		    error: function(){
-		    	alert('Error loading ' + item[0]);
- 			$( "#dialog-modal" ).dialog( "close" );
-           	    } 
-                
-                });
-            }
-        });
-
-    },
-    
-    isReady : function() {
-        return (this.nLoaded == 0);
-    }
-       
-};*/
 
 
 /**
@@ -681,7 +630,7 @@ function Primitive() {
 		setMatrixUniforms(shader);
 		gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
 
-		//shader.setInactive();
+		shader.setInactive();
    	}
 }
 

@@ -1,5 +1,6 @@
 attribute vec3 aVertexPosition;
 attribute vec4 aVertexNormal;
+attribute vec2 aTextureCoord;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;

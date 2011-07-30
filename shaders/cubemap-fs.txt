@@ -5,8 +5,8 @@ precision highp float;
 varying vec3 vNormal;
 varying vec4 vColor;
 
-uniform samplerCube cSampler;
+uniform samplerCube uSampler;
 
 void main(void) {
-    gl_FragColor = textureCube(cSampler,vNormal) * vColor;
+    gl_FragColor = textureCube(uSampler,vNormal);
 }

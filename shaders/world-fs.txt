@@ -19,7 +19,7 @@ uniform vec3 uPointLightingLocation;
 uniform vec3 uPointLightingDiffuseColor;
 uniform vec3 uPointLightingSpecularColor;
 
-uniform samplerCube cSampler;
+uniform samplerCube uSampler;
 
 void main(void) {
     vec3 ambientLightWeighting = uAmbientLightingColor;
@@ -43,18 +43,13 @@ void main(void) {
     vec3 materialEmissiveColor = uMaterialEmissiveColor;
     float alpha = 1.0;
 
-    vec4 textureColor = textureCube(cSampler,vNormal);
+    vec4 textureColor = textureCube(uSampler,vNormal);
     materialAmbientColor = materialAmbientColor * textureColor.rgb;
     materialDiffuseColor = materialDiffuseColor * textureColor.rgb;
     materialEmissiveColor = materialEmissiveColor * textureColor.rgb;
     alpha = textureColor.a;
  
-
-    gl_FragColor = vec4(
-      materialAmbientColor * ambientLightWeighting
-      + materialDiffuseColor * diffuseLightWeighting
-      + materialSpecularColor * specularLightWeighting
-      + materialEmissiveColor,
-      alpha
-    );
+	gl_FragColor = textureColor;
+  /*  gl_FragColor = vec4( materialAmbientColor * ambientLightWeighting + materialDiffuseColor * diffuseLightWeighting
+     + materialSpecularColor * specularLightWeighting + materialEmissiveColor, alpha);*/
 }
