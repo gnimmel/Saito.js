@@ -162,15 +162,6 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 	}
 	
 	// We now have all the points so we just need some indicies
-	
-	var colors = [];
-    
-  	for (var i=0; i < size; i ++){
-   		colors.push(r);
-   		colors.push(g);
-   		colors.push(b);
-   		colors.push(a);
-   	}
    	
    	var curveVertexIndices = [];
 
@@ -205,23 +196,31 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
    
  	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    curve.vertexPositionBuffer.itemSize = 3;
-    curve.vertexPositionBuffer.numItems = vertices.length / 3;
+	curve.vertexPositionBuffer.itemSize = 3;
+	curve.vertexPositionBuffer.numItems = vertices.length / 3;
+
+	var colors = [];
+    
+  	for (var i=0; i < vertices.length; i++){
+   		colors.push(r);
+   		colors.push(g);
+   		colors.push(b);
+   		colors.push(a);
+   	}
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    curve.vertexColorBuffer.itemSize = 4;
-    curve.vertexColorBuffer.numItems = colors.length / 4;
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+	curve.vertexColorBuffer.itemSize = 4;
+	curve.vertexColorBuffer.numItems = colors.length / 4;
     
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
-    curve.vertexIndexBuffer.itemSize = 1;
-    curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
+	curve.vertexIndexBuffer.itemSize = 1;
+	curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
  
 	curve.drawPrimitive = gl.TRIANGLE_STRIP;
 
-    return curve;
-	
+	return curve;
 }
 
 
@@ -236,13 +235,9 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 	var sx = Math.sin(startlon) * Math.cos(startlat);
 	var sy = Math.sin(startlat);
 	
-	//console.log(sx,sy,sz);
-
 	var ez = Math.cos(endlon) * Math.cos(endlat);
 	var ex = Math.sin(endlon) * Math.cos(endlat);
 	var ey = Math.sin(endlat);
-	
-	//console.log(ex,ey,ez);
 	
 	var s = $V([sx,sy,sz]);
 	var e = $V([ex,ey,ez]);
@@ -262,8 +257,6 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 	var c2 = s.add(ddd);
 	c2 = c2.add (height);
 	
-//	console.log(c2);
-
 	return createCurveCube(s, e, c1, c2, facing, segments, w, r,g,b,a);
 }
 
