@@ -105,7 +105,7 @@ var curves = new Array();
 });
 
 /**
- * Setup a JSON Call every 5 seconds to grab data
+ * Grab feeds from the webserver and create a set of curves 
  */
 
 //window.setInterval(grabFeeds, 3000);
@@ -113,10 +113,11 @@ var curves = new Array();
 function grabFeeds() { 
 
     $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
-        var output;
-	$.each(data, function(key, value) { 
-		output += data;
-	});
+        var countries = data['entries'];
+	for (var i=0; i < countries.length; i++){
+		country = countries[i];
+		curves.add( createWorldCurveCube(50,0,country['lat'],country['lon'],0.05,20,0.01,0.0,1.0,0.0,1.0));
+	}
     });
 	
 }
@@ -132,10 +133,6 @@ function grabFeeds() {
 $S.setup = function () {
     
 	sphere = createSphere(40,40);
-
-	curve4 = createWorldCurveCube(50, 0, 90, 0, 0.05,
-    					20, 0.01, 
-    					0.0, 1.0, 0.0, 1.0);
     
        
 	// Ray Shader
@@ -210,7 +207,11 @@ $S.draw = function () {
 	mvPushMatrix();	
 	mvRotate(-90.0, [0.0,1.0,0.0]);
     
-	curve4.draw(basicShader);
+	for (var i=0; i < curves.length; i++){
+		curves[i].draw(basicShader);
+	}
+
+
 	mvPopMatrix();
 
 }    
