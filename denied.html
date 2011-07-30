@@ -69,7 +69,7 @@ var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
 var curves = new Array();
-var test = false;
+var test = true;
 var testcurve;
 
 
@@ -117,9 +117,18 @@ function grabFeeds() {
 
     $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
         var countries = data['entries'];
+	var topcount = 0;	
+
+	// First, get the highest amount and scale all subsequent results accordingly
+	for (var i=0; i < countries.length; i++){
+		if (countries[i].count > topcount) topcount = countries[i].count;
+	}
+	
+
 	for (var i=0; i < countries.length; i++){
 		country = countries[i];
-		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20,0.01,1.0,0.0,0.0,0.1));
+		var factor =  country['count'] / topcount;
+		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.0,0.0,0.5 * factor));
 	}
     });
 	
@@ -148,7 +157,7 @@ $S.setup = function () {
 		grabFeeds()
 	}
 	else {
-		testcurve =  createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.01, 1.0,0.0,0.0,0.1)
+		testcurve =  createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.02, 1.0,0.0,0.0,0.5);
 	}
 
 	// Load the Cubemap
