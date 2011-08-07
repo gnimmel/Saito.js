@@ -112,6 +112,7 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
     gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexPositionBuffer);
     
   	var vertices = [];
+	var normals = [];
   
   	// Direction gives the next point - this is point segment 0 to 1
 
@@ -128,6 +129,11 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
   	vertices.push(vert0.e(1)); vertices.push(vert0.e(2)); vertices.push(vert0.e(3));
 	vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
 	vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
+	
+	normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
+	normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
+	normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
+	normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
 
 	var size = 4;
 	// Front Face
@@ -142,6 +148,10 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 		vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
 		vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
 		size +=2;
+
+		normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
+		normals.push(facing.e(1)); normals.push(facing.e(2)); normals.push(facing.e(3));
+
 	}
 	
 	var halfSize = size;
@@ -159,6 +169,9 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 		vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3) - width);
 		vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3) - width);
 		size +=2;
+		normals.push(-facing.e(1)); normals.push(-facing.e(2)); normals.push(-facing.e(3));
+		normals.push(-facing.e(1)); normals.push(-facing.e(2)); normals.push(-facing.e(3));
+
 	}
 	
 	// We now have all the points so we just need some indicies
@@ -217,6 +230,11 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
 	curve.vertexIndexBuffer.itemSize = 1;
 	curve.vertexIndexBuffer.numItems = curveVertexIndices.length;
+	
+	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexNormalBuffer);
+    	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+ 	curve.vertexNormalBuffer.itemSize = 3;
+	curve.vertexNormalBuffer.numItems = normals.length / 3;
  
 	curve.drawPrimitive = gl.TRIANGLE_STRIP;
 

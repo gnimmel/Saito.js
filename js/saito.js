@@ -30,6 +30,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo reindent and recomment
  * \todo fix the model loading
  * \todo handle the matrix funtions for setting up defaults
+ * \todo lighting class that actually works with real gl lighting (and in the shader too) - if possible
  */
 
 /**
@@ -249,6 +250,9 @@ SaitoShader = function(vertpath,fragpath) {
 
 							gl.linkProgram(object.shaderProgram);
 
+							// Test for uniforms
+					
+
 
         					}else{ alert('Data file ' + vertpath + 'was empty!'); }
 					}     
@@ -269,10 +273,10 @@ SaitoShader = function(vertpath,fragpath) {
  * Set a uniform of 3 floats
  */
 
-SaitoShader.prototype.setUniform3f = function( name, variable) {
+SaitoShader.prototype.setUniform3f = function( name, v0,v1,v2) {
 	if (this.shaderProgram != undefined){
 		var uniform = gl.getUniformLocation(this.shaderProgram, name);
-		gl.uniform3f(uniform,variable[0],variable[1],variable[2]);
+			gl.uniform3f(uniform,v0,v1,v2);	
 	}
 }
 
@@ -612,13 +616,12 @@ function Primitive() {
 	this.vertexColorBuffer          = gl.createBuffer();
 	this.vertexIndexBuffer          = gl.createBuffer();
 	this.drawPrimitive		= gl.TRIANGLES;
-	
+	this.vertexTangentBuffer	= gl.createBuffer();
 
 
 
 	this.draw = function (shader) {
-    		shader.setActive();
-		
+    				
 		/// \todo Bind Buffers - This really should be done just once but its nice to have it here now. 
 		/// \todo The Attribs are set here which isn't good as it needs to be the same in the shader
 					
@@ -626,7 +629,7 @@ function Primitive() {
 		var aVertexPosition = shader.getAttribArray("aVertexPosition");     
 		var aVertexNormal = shader.getAttribArray("aVertexNormal");     
 		var aVertexColour = shader.getAttribArray("aVertexColour");     
-	     
+	     	var aVertexTangent = shader.getAttribArray("aVertexTangent");    
 	     
 		if (aTextureCoord != -1 && aTextureCoord!= undefined) {
 			gl.enableVertexAttribArray(aTextureCoord);
@@ -652,13 +655,19 @@ function Primitive() {
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
 			gl.vertexAttribPointer(aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
+		
+		if (aVertexTangent!= -1 && aVertexTangent != undefined) {
+			gl.enableVertexAttribArray(aVertexTangent);
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTangentBuffer);
+			gl.vertexAttribPointer(aVertexTangent, this.vertexTangentBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+
 
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 		setMatrixUniforms(shader);
 		gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
 
-		shader.setInactive();
    	}
 }
 
@@ -851,6 +860,7 @@ function createSphere(latitudeBands,longitudeBands) {
     var normalData = [];
     var textureCoordData = [];
     var colorData = [];
+	var tangentData = [];
     
     for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
       var theta = latNumber * Math.PI / latitudeBands;
@@ -879,9 +889,20 @@ function createSphere(latitudeBands,longitudeBands) {
         
         textureCoordData.push(u);
         textureCoordData.push(v);
-        vertexPositionData.push(radius * x);
-        vertexPositionData.push(radius * y);
-        vertexPositionData.push(radius * z);
+
+	var vs = $V([radius *x, radius *y, radius *z]);
+	var ns = $V([0,1,0]);
+
+        vertexPositionData.push(vs.e(1));
+        vertexPositionData.push(vs.e(2));
+        vertexPositionData.push(vs.e(3));
+
+	vs = vs.cross(ns);
+	
+        tangentData.push(vs.e(1));
+        tangentData.push(vs.e(2));
+        tangentData.push(vs.e(3));
+
       }
     }
 
@@ -914,6 +935,12 @@ function createSphere(latitudeBands,longitudeBands) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), gl.STATIC_DRAW);
     sphere.vertexPositionBuffer.itemSize = 3;
     sphere.vertexPositionBuffer.numItems = vertexPositionData.length / 3;
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, sphere.vertexTangentBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(tangentData), gl.STATIC_DRAW);
+    sphere.vertexTangentBuffer.itemSize = 3;
+    sphere.vertexTangentBuffer.numItems = tangentData.length / 3;
+
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphere.vertexIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);

@@ -26,18 +26,23 @@ Based on the excellent work from:
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
 
+
+* Some of the textures were found at http://vterrain.org/Imagery/WholeEarth/
+
  -->
 
 
 
 <html>
 <head>
-<title>Saito.js</title>
+<title>DENIED - Saito.js</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 <link rel="stylesheet" href="css/960.css" />
 <link rel="stylesheet" href="css/Saito.css" />
+<link rel="stylesheet" href="css/Denied.css" />
+
 
 <!-- JS For Additional OpenGL Functions -->
 
@@ -66,11 +71,12 @@ var basicShader;
 var cubemapShader;
 var curveShader;
 var textureCube;
+var textureCubeBump;
 var rotateX = 0;
 var rotateY = 0;
-var zoom = 1;
+var zoom = 9;
 var curves = new Array();
-var test = false;
+var test = true;
 var testcurve;
 
 
@@ -78,14 +84,15 @@ var testcurve;
  * Setup controls - JQuery related - Not S9WebGL per-se
  */
 
-Saito.mouseScrollUp = function() {
+Saito.mouseScrollDown = function() {
 	zoom += 0.1;
 	if (zoom > 9.0) zoom = 9.0;
 };
 
-Saito.mouseScrollDown = function() {
+Saito.mouseScrollUp = function() {
 	zoom -= 0.1;
-	if (zoom < 1.0) zoom = 1.0;
+	if (zoom < 2.0) zoom = 2.0;
+
 };
 
 
@@ -111,6 +118,7 @@ function grabFeeds() {
 		country = countries[i];
 		var scale =  country['count'] / topcount;
 		var factor = (Math.log (scale) + 5.0 ) / 5.0; 
+
 		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.0,0.0,0.5 * factor));
 	}
     });
@@ -127,7 +135,7 @@ function grabFeeds() {
 
 $S.setup = function () {
     
-	sphere = createSphere(40,40);
+	sphere = createSphere(60,60);
     
        
 	// Ray Shader
@@ -140,12 +148,23 @@ $S.setup = function () {
 		grabFeeds()
 	}
 	else {
-		testcurve =  createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.02, 1.0,0.0,0.0,0.5);
+
+		
+		curves.push(createCurveCube($V([1,0,0]), $V([0,1,0]),  $V([1.75,1.25,0]),  $V([1.25,1.75,0]), $V([0,0,1]), 20, 0.02, 1.0,0.0,0.0,1.0));
+//		curves.push(createCurveCube($V([1.5,0,1]), $V([-1.5,1,1]),  $V([1.75,1.25,1]),  $V([1.25,1.75,1]), $V([0,0,1]), 20, 0.02, 1.0,0.0,0.0,1.0));
+
+//		curves.push(createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.02, 1.0,0.0,0.0,1.0));
+//		curves.push(createWorldCurveCube(51, 0, 39.0, -50.0, 0.5, 20, 0.02, 1.0,0.0,0.0,1.0));
+//		curves.push(createWorldCurveCube(21, 0, 14.0, 90.0, 0.5, 20, 0.01, 1.0,0.0,0.0,1.0));
+//		curves.push(createWorldCurveCube(40, 0, 40.0, 80.0, 0.5, 20, 0.01, 1.0,0.0,0.0,1.0));
+
 	}
 
-	// Load the Cubemap
-	textureCube = new SaitoTextureCube("textures/world_day_cube/cube","gif");
-}
+	// Load the Cubemaps
+	textureCube = new SaitoTextureCube("textures/world_night_cube/cube","gif");
+	textureCubeBump = new SaitoTextureCube("textures/world_normal_cube/cube","gif");
+
+}	
 
 
 
@@ -173,52 +192,59 @@ $S.draw = function () {
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	perspective(50, gl.viewportWidth / gl.viewportHeight, 1.0, 100.0);
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 	loadIdentity();  
 
-	// Enable Blending
-	gl.disable(gl.DEPTH_TEST);
-	gl.enable(gl.BLEND);
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+	mvTranslate([0.0, 0.0, -zoom]);
 
-	// Draw the world first.
-
-	mvTranslate([0.0, 0.0, -10.0]);
-
-	mvScale([zoom,zoom,zoom]);
-    
+	mvPushMatrix();    
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
  	mvRotate(rotateY,[0.0,1.0,0.0]);  
-	  
+
+
+	// Now draw the world
+
+	var lightPos = $V([0.0,0.0, 10.0 + (4.0 - zoom)]);
+
 	worldShader.setActive();
-	worldShader.setUniform3f(" uMaterialAmbientColor", [1.0,1.0,1.0] );
-	worldShader.setUniform3f(" uMaterialDifffuseColor", [1.0,1.0,1.0] );
-	worldShader.setUniform3f(" uMaterialSpecularColor", [1.0,1.0,1.0] );
-	worldShader.setUniform3f(" uMaterialEmissiveColor", [1.0,1.0,1.0] );
-	worldShader.setUniform1f(" uMaterialShininess", 1.0 );
+	worldShader.setUniform3f("uMaterialAmbientColor", 0.4,0.2,0.2 );
+	worldShader.setUniform3f("uMaterialDiffuseColor", 0.2,0.3,1.0 );
+	worldShader.setUniform3f("uMaterialSpecularColor", 1.0,1.0,1.0 );
+	worldShader.setUniform3f("uMaterialEmissiveColor", 0.0,0.0,0.1 );
+	worldShader.setUniform1f("uMaterialShininess", 10.0);
 
-	worldShader.setUniform3f(" uAmbientLightingColor", [1.0,1.0,1.0] );
-	worldShader.setUniform3f(" uPointLightingLocation", [1.0,1.0,-10.0] );
-	worldShader.setUniform3f(" uPointLightingDiffuseColor", [1.0,1.0,1.0] );
-	worldShader.setUniform3f(" uPointLightingSpecularColor", [1.0,1.0,1.0] );
-	worldShader.setUniform1i(" uSampler", 0);
+	worldShader.setUniform3f("uAmbientLightingColor", 0.1,0.1,0.1 );
+	worldShader.setUniform3f("uPointLightingLocation", lightPos.e(1), lightPos.e(2), lightPos.e(3));
+	worldShader.setUniform3f("uPointLightingDiffuseColor", 1.0,1.0,1.0 );
+	worldShader.setUniform3f("uPointLightingSpecularColor", 0.0,1.0,1.0 );
+	worldShader.setUniform1i("uSampler", 0);
+	worldShader.setUniform1i("uSamplerBump", 1);
 
-
+	gl.activeTexture(gl.TEXTURE0);
     	textureCube.bind();
-	sphere.draw(cubemapShader);
+	gl.activeTexture(gl.TEXTURE1);
+	textureCubeBump.bind();
+
+	sphere.draw(worldShader);
 	textureCube.unbind();
 	worldShader.setInactive();
-    
+
+	// Enable Blending
+	gl.enable(gl.BLEND);
+//	gl.disable(gl.DEPTH_TEST);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+	curveShader.setActive();    
+
 	// Now draw the curves but rotate and translate so they match the sphere
 	mvPushMatrix();	
-	if (test == false){
-		for (var i=0; i < curves.length; i++){
-			curves[i].draw(curveShader);
-		}
+	for (var i=0; i < curves.length; i++){
+		curves[i].draw(curveShader);
 	}
-	else {
-		testcurve.draw(curveShader);
-	}
+	curveShader.setInactive();
+	
+	mvPopMatrix();
+//	gl.enable(gl.DEPTH_TEST);
+	gl.disable(gl.BLEND);
 
 	mvPopMatrix();
 
@@ -231,7 +257,9 @@ $S.draw = function () {
 
 <body onload="Saito.initialize()">
     
-<div id="mainbody">        
+
+<div id="title"><h1>DENIED</h1></div>  
+<div id="mainbody">      
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
 </div>
 </body>

@@ -6,6 +6,10 @@ varying vec2 vTextureCoord;
 varying vec4 vTransformedNormal;
 varying vec3 vNormal;
 varying vec4 vPosition;
+varying mat4 vNormalMatrix;
+varying vec3 vLightDir;
+varying vec3 vEyeDir;
+
 
 uniform vec3 uMaterialAmbientColor;
 uniform vec3 uMaterialDiffuseColor;
@@ -14,42 +18,32 @@ uniform float uMaterialShininess;
 uniform vec3 uMaterialEmissiveColor;
 
 uniform vec3 uAmbientLightingColor;
-
-uniform vec3 uPointLightingLocation;
 uniform vec3 uPointLightingDiffuseColor;
 uniform vec3 uPointLightingSpecularColor;
 
 uniform samplerCube uSampler;
+uniform samplerCube uSamplerBump;
+
+
 
 void main(void) {
-    vec3 ambientLightWeighting = uAmbientLightingColor;
 
-    vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
-    vec3 normal = normalize(vTransformedNormal.xyz);
+	vec4 textureColor = textureCube(uSampler,vNormal);
+	vec4 textureColorBump = 2.0 * textureCube(uSamplerBump, vNormal) - 1.0;
 
-    vec3 specularLightWeighting = vec3(0.0, 0.0, 0.0);
-    vec3 eyeDirection = normalize(-vPosition.xyz);
-    vec3 reflectionDirection = reflect(-lightDirection, normal);
+	vec3 bump = normalize( textureColorBump.xyz);
+	float diffuse = max( dot(vLightDir, bump), 0.0 );
 
-    float specularLightBrightness = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
-    specularLightWeighting = uPointLightingSpecularColor * specularLightBrightness;
+	vec4 lAmbient = vec4(uAmbientLightingColor * uMaterialAmbientColor,1.0);
+	
+	vec4 lDiffuse = vec4(uMaterialDiffuseColor * uPointLightingDiffuseColor * diffuse, 1.0);
 
-    float diffuseLightBrightness = max(dot(normal, lightDirection), 0.0);
-    vec3 diffuseLightWeighting = uPointLightingDiffuseColor * diffuseLightBrightness;
-    
-    vec3 materialAmbientColor = uMaterialAmbientColor;
-    vec3 materialDiffuseColor = uMaterialDiffuseColor;
-    vec3 materialSpecularColor = uMaterialSpecularColor;
-    vec3 materialEmissiveColor = uMaterialEmissiveColor;
-    float alpha = 1.0;
+	float specular = pow(clamp(dot(reflect(-vLightDir.xyz, bump), normalize(vEyeDir.xyz)), 0.0, 1.0), uMaterialShininess );
+	
+	vec4 lSpecular = vec4(uPointLightingSpecularColor * uMaterialSpecularColor * specular, 1.0);	
+	
+	gl_FragColor = 	lAmbient * textureColor + lDiffuse * textureColor + lSpecular;
 
-    vec4 textureColor = textureCube(uSampler,vNormal);
-    materialAmbientColor = materialAmbientColor * textureColor.rgb;
-    materialDiffuseColor = materialDiffuseColor * textureColor.rgb;
-    materialEmissiveColor = materialEmissiveColor * textureColor.rgb;
-    alpha = textureColor.a;
- 
-	gl_FragColor = textureColor;
-  /*  gl_FragColor = vec4( materialAmbientColor * ambientLightWeighting + materialDiffuseColor * diffuseLightWeighting
-     + materialSpecularColor * specularLightWeighting + materialEmissiveColor, alpha);*/
+	
+
 }

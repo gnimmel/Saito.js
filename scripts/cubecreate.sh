@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 convert $1 test.ppm
 
 project gnomonic -scale 2 -lat 0 -long  90 -w $2 -h $2 -f test.ppm > real_00.ppm

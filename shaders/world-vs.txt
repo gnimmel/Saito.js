@@ -1,21 +1,52 @@
 attribute vec3 aVertexPosition;
 attribute vec3 aVertexNormal;
 attribute vec2 aTextureCoord;
+attribute vec3 aVertexTangent;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform mat4 uNormalMatrix;
+uniform vec3 uPointLightingLocation;
+
 
 varying vec2 vTextureCoord;
 varying vec4 vTransformedNormal;
 varying vec4 vPosition;
 varying vec3 vNormal;
-
+varying mat4 vNormalMatrix;
+varying vec3 vLightDir;
+varying vec3 vEyeDir;
 
 void main(void) {
-    vPosition = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
-    gl_Position =  vPosition;
-    vTextureCoord = aTextureCoord;
-    vNormal = aVertexNormal;
-    vTransformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+	vPosition = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+	gl_Position =  vPosition;
+	vTextureCoord = aTextureCoord;
+ 	vNormal = aVertexNormal;
+	vTransformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+	vNormalMatrix = uNormalMatrix;
+
+	
+	// Sort out the Tangent space for bump mapping
+
+	vec4 tt = uNormalMatrix * vec4(aVertexTangent,1.0);
+	vec3 t = normalize(tt.xyz);
+	vec3 b = cross (vTransformedNormal.xyz, t);
+	
+	// Now set the lighting bits we need in Tangent Space
+	
+	vec3 tmpVec = normalize(uPointLightingLocation - vPosition.xyz);
+
+	vLightDir.x = dot(tmpVec, t);
+	vLightDir.y = dot(tmpVec, b);
+	vLightDir.z = dot(tmpVec, vTransformedNormal.xyz);
+
+	// Normalize the lightdir for now so we dont get nasty affects
+	//vLightDir  = normalize(vLightDir);
+
+	
+	tmpVec = -vPosition.xyz;
+	vEyeDir.x = dot(tmpVec, t);
+	vEyeDir.y = dot(tmpVec, b);
+	vEyeDir.z = dot(tmpVec, vTransformedNormal.xyz);
+	
 }
