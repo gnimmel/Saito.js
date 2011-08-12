@@ -32,11 +32,26 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  -->
 
 
+<!doctype html>
 
-<html>
+<!--[if lt IE 7]> 
+ 	<meta http-equiv="refresh" content="5;url=http://www.webstandards.org/action/previous-campaigns/buc/upgrade/" />
+ <![endif]-->
+<!--[if IE 7 ]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
 <head>
 <title>DENIED - Saito.js</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+<meta name="description" content="">
+<meta name="author" content="">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="/favicon.ico">
+
 
 <link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 <link rel="stylesheet" href="css/960.css" />
@@ -74,7 +89,7 @@ var textureCube;
 var textureCubeBump;
 var rotateX = 0;
 var rotateY = 0;
-var zoom = 9;
+var zoom = 3.5;
 var curves = new Array();
 var test = true;
 var testcurve;
@@ -84,7 +99,7 @@ var testcurve;
  * Setup controls - JQuery related - Not S9WebGL per-se
  */
 
-Saito.mouseScrollDown = function() {
+/*Saito.mouseScrollDown = function() {
 	zoom += 0.1;
 	if (zoom > 9.0) zoom = 9.0;
 };
@@ -93,7 +108,7 @@ Saito.mouseScrollUp = function() {
 	zoom -= 0.1;
 	if (zoom < 2.0) zoom = 2.0;
 
-};
+};*/
 
 
 /**
@@ -136,7 +151,6 @@ function grabFeeds() {
 $S.setup = function () {
     
 	sphere = createSphere(60,60);
-    
        
 	// Ray Shader
 	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
@@ -148,16 +162,7 @@ $S.setup = function () {
 		grabFeeds()
 	}
 	else {
-
-		
-		curves.push(createCurveCube($V([1,0,0]), $V([0,1,0]),  $V([1.75,1.25,0]),  $V([1.25,1.75,0]), $V([0,0,1]), 20, 0.02, 1.0,0.0,0.0,1.0));
-//		curves.push(createCurveCube($V([1.5,0,1]), $V([-1.5,1,1]),  $V([1.75,1.25,1]),  $V([1.25,1.75,1]), $V([0,0,1]), 20, 0.02, 1.0,0.0,0.0,1.0));
-
-//		curves.push(createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.02, 1.0,0.0,0.0,1.0));
-//		curves.push(createWorldCurveCube(51, 0, 39.0, -50.0, 0.5, 20, 0.02, 1.0,0.0,0.0,1.0));
-//		curves.push(createWorldCurveCube(21, 0, 14.0, 90.0, 0.5, 20, 0.01, 1.0,0.0,0.0,1.0));
-//		curves.push(createWorldCurveCube(40, 0, 40.0, 80.0, 0.5, 20, 0.01, 1.0,0.0,0.0,1.0));
-
+		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.0,0.0,1.0));
 	}
 
 	// Load the Cubemaps
@@ -197,14 +202,16 @@ $S.draw = function () {
 
 	mvTranslate([0.0, 0.0, -zoom]);
 
+	var lightPos = $V([0.0, 0.0, -2.0]);
+	lightPos.x(Saito.prototype.modelViewMatrix); 
+
+
 	mvPushMatrix();    
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
  	mvRotate(rotateY,[0.0,1.0,0.0]);  
 
 
 	// Now draw the world
-
-	var lightPos = $V([0.0,0.0, 10.0 + (4.0 - zoom)]);
 
 	worldShader.setActive();
 	worldShader.setUniform3f("uMaterialAmbientColor", 0.4,0.2,0.2 );
@@ -247,7 +254,6 @@ $S.draw = function () {
 	gl.disable(gl.BLEND);
 
 	mvPopMatrix();
-
 }    
  
 </script>
@@ -257,11 +263,31 @@ $S.draw = function () {
 
 <body onload="Saito.initialize()">
     
-
+<header>
 <div id="title"><h1>DENIED</h1></div>  
-<div id="mainbody">      
+
+</header>
+
+<div id="mainbody" role="main">      
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
 </div>
+
+<script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2107281-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
 </body>
 
 </html>
