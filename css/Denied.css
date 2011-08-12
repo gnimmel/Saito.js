@@ -32,11 +32,12 @@
 	
 }
 
-#lefthand p {
+.cityline {
 	font-family: 'courier', serif;
 	font-size: 8px;
 	color: white;
 }
+
 
 
 h1 {
