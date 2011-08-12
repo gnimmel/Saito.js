@@ -69,6 +69,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/saito.js"></script>
 <script type="text/javascript" src="js/saito_shapes.js"></script>
+<script type="text/javascript" src="js/jquery-text-effects.js"></script>
 
 
 <!-- Main Java Script GL Functions 
@@ -136,6 +137,14 @@ function grabFeeds() {
 		if (factor > 0.02)
 			curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.01,0.01,1.0));
 	}
+
+	///\todo gradually fade in things here
+
+	var time = date['time'];
+	$('#lefthand p').append(time);	
+
+	$('#lefthand p').typewriter();	
+
     });
 	
 }
@@ -264,9 +273,12 @@ $S.draw = function () {
 <body onload="Saito.initialize()">
     
 <header>
-<div id="title"><h1>DENIED</h1></div>  
-
+	<div id="title"><h1>DENIED</h1></div>  
 </header>
+
+<div id ="lefthand">
+	<p></p>
+</div>
 
 <div id="mainbody" role="main">      
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
