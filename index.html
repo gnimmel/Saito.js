@@ -7,9 +7,9 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.01
+SAITO.JS  v.02
 
-index.html
+denied.html
 
 Benjamin Blundell
 
@@ -28,6 +28,8 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
  -->
 
+
+
 <html>
 <head>
 <title>Saito.js</title>
@@ -35,33 +37,23 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 <link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
 <link rel="stylesheet" href="css/960.css" />
-<link rel="stylesheet" href="css/S9WebGL.css" />
+<link rel="stylesheet" href="css/Saito.css" />
 
 <!-- JS For Additional OpenGL Functions -->
 
-<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.6.2.js"></script>
 <script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.mousewheel.js"></script>
 <script type="text/javascript" src="js/sylvester.js"></script>
 <script type="text/javascript" src="js/glUtils.js"></script>
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/saito.js"></script>
+<script type="text/javascript" src="js/saito_shapes.js"></script>
 
 
 <!-- Main Java Script GL Functions 
 
 - $S is the main Section9 WebGL Class instance that has master control
-
-- $RL is the resource loader instance that controls all resources like
-models, textures and shaders
-
-- $R is shorthand for $RL.resourceByTag and allows nice access to each
-resource via their user assigned name
-
-There are 4 functons to override:
-    - setupResources - loading anything external here
-    - preLoop - Do all your initialization here
-    - draw - make your drawing calls here
-    - update - Update the state of your program here
 
 -->
 <script type="text/javascript">
@@ -69,91 +61,97 @@ There are 4 functons to override:
 // Globals you want to mess with
 
 var sphere;
-var shader;
+var worldShader;
+var basicShader;
+var cubemapShader;
+var curveShader;
+var textureCube;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 1;
+var curves = new Array();
+var test = false;
+var testcurve;
 
 
-// ****************************************************
-// Setup controls - JQuery related - Not S9WebGL per-se
-// ****************************************************
+/**
+ * Setup controls - JQuery related - Not S9WebGL per-se
+ */
 
-$(function(){
-    $('#sliderX').slider({
-        range: false,
-        orientation: "vertical",
-        values: [50],
-        slide: function(event, ui) { 
-            rotateX = 360 / 100 * ui.value - 180;       
-        }
+Saito.mouseScrollUp = function() {
+	zoom += 0.1;
+	if (zoom > 9.0) zoom = 9.0;
+};
+
+Saito.mouseScrollDown = function() {
+	zoom -= 0.1;
+	if (zoom < 1.0) zoom = 1.0;
+};
+
+
+/**
+ * Grab feeds from the webserver and create a set of curves 
+ */
+
+//window.setInterval(grabFeeds, 3000);
+
+function grabFeeds() { 
+
+    $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
+        var countries = data['entries'];
+	var topcount = 0;	
+
+	// First, get the highest amount and scale all subsequent results accordingly
+	for (var i=0; i < countries.length; i++){
+		if (countries[i].count > topcount) topcount = countries[i].count;
+	}
+	
+
+	for (var i=0; i < countries.length; i++){
+		country = countries[i];
+		var scale =  country['count'] / topcount;
+		var factor = (Math.log (scale) + 5.0 ) / 5.0; 
+		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.0,0.0,0.5 * factor));
+	}
     });
-    
-    $('#sliderY').slider({
-        range: false,
-        values: [50],
-        slide: function(event, ui) { 
-            rotateY = 360 / 100 * ui.value - 180;      
-        }
-    });
-    
-    $('#sliderZoom').slider({
-        range: false,
-        orientation: "vertical",
-        values: [0],
-        slide: function(event, ui) { 
-            zoom = 5 / 100 *  ui.value + 1;   
-        }
-    });
-    
-    
-});
-
-
-// ****************************************************
-// S9 GL Load resources
-// ****************************************************
-
-$S.setupResources = function () {
-    $RL.addFragmentShader("shaders/basic-fs.txt", "basicfrag");
-    $RL.addVertexShader("shaders/basic-vs.txt", "basicvert");
-    
-    $RL.addTexture("textures/world.png","world");
-    $RL.addTexture("textures/world_night.gif","worldnight");
+	
 }
 
-// ****************************************************
-// S9 GL Init Variables and Environment
-// ****************************************************
 
-$S.preLoop = function () {
-   
-      
-    sphere = createSphere(50,50);
 
-    // create Shader
-    shader = createShaders("basicvert","basicfrag", "basic");
+/**
+ * Saito Load resources
+ */
+
+
+
+$S.setup = function () {
     
-    // link variables and shader variables 
-    $S.setActiveShader("basic");   
-
-    shader.vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
-    gl.enableVertexAttribArray(shader.vertexPositionAttribute);
-
-    shader.vertexColorAttribute = gl.getAttribLocation(shader, "aVertexColor");
-    gl.enableVertexAttribArray(shader.vertexColorAttribute);
+	sphere = createSphere(40,40);
     
-    shader.textureCoordAttribute = gl.getAttribLocation(shader, "aTextureCoord");
-    gl.enableVertexAttribArray(shader.textureCoordAttribute);
+       
+	// Ray Shader
+	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
+	basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
+	cubemapShader = new SaitoShader("shaders/cubemap-vs.txt", "shaders/cubemap-fs.txt");
+	curveShader = new SaitoShader("shaders/curve-vs.txt", "shaders/curve-fs.txt");
+	
+	if (test == false) {
+		grabFeeds()
+	}
+	else {
+		testcurve =  createWorldCurveCube(51, 0, 39.0, 116.0, 0.5, 20, 0.02, 1.0,0.0,0.0,0.5);
+	}
 
-    shader.pMatrixUniform = gl.getUniformLocation(shader, "uPMatrix");
-    shader.mvMatrixUniform = gl.getUniformLocation(shader, "uMVMatrix");
- 
+	// Load the Cubemap
+	textureCube = new SaitoTextureCube("textures/world_day_cube/cube","gif");
 }
 
-// ****************************************************
-// S9 GL Update GL
-// ****************************************************
+
+
+/**
+ * Saito Update GL
+ */
 
 $S.update = function () {
     if ($S.mouseDown){
@@ -162,31 +160,68 @@ $S.update = function () {
     } 
 } 
 
-// ****************************************************
-// S9 GL Drawing
-// ****************************************************
+
+/**
+ * Saito Drawing
+ */
 
 $S.draw = function () {
-    
-    gl.clearColor(0.95, 0.95, 0.95, 1.0);
-    gl.clearDepth(1.0);
-    
-    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-    loadIdentity();
+	gl.clearColor(0.05, 0.05, 0.05, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 1.0, 100.0);
+	loadIdentity();  
+
+	// Enable Blending
+	gl.disable(gl.DEPTH_TEST);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+	// Draw the world first.
+
+	mvTranslate([0.0, 0.0, -10.0]);
+
+	mvScale([zoom,zoom,zoom]);
     
-    mvTranslate([0.0, 0.0, -10.0]);
-   
-    mvScale([zoom,zoom,zoom]);
+ 	mvRotate(rotateX,[1.0,0.0,0.0]); 
+ 	mvRotate(rotateY,[0.0,1.0,0.0]);  
+	  
+	worldShader.setActive();
+	worldShader.setUniform3f(" uMaterialAmbientColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialDifffuseColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialSpecularColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uMaterialEmissiveColor", [1.0,1.0,1.0] );
+	worldShader.setUniform1f(" uMaterialShininess", 1.0 );
+
+	worldShader.setUniform3f(" uAmbientLightingColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uPointLightingLocation", [1.0,1.0,-10.0] );
+	worldShader.setUniform3f(" uPointLightingDiffuseColor", [1.0,1.0,1.0] );
+	worldShader.setUniform3f(" uPointLightingSpecularColor", [1.0,1.0,1.0] );
+	worldShader.setUniform1i(" uSampler", 0);
+
+
+    	textureCube.bind();
+	sphere.draw(cubemapShader);
+	textureCube.unbind();
+	worldShader.setInactive();
     
-    mvRotate(rotateX,[1.0,0.0,0.0]); 
-    mvRotate(rotateY,[0.0,1.0,0.0]);  
-    
-    gl.bindTexture(gl.TEXTURE_2D, $R["worldnight"]);
-    
-    sphere.draw();
+	// Now draw the curves but rotate and translate so they match the sphere
+	mvPushMatrix();	
+	if (test == false){
+		for (var i=0; i < curves.length; i++){
+			curves[i].draw(curveShader);
+		}
+	}
+	else {
+		testcurve.draw(curveShader);
+	}
+
+	mvPopMatrix();
+
 }    
  
 </script>
@@ -194,48 +229,11 @@ $S.draw = function () {
 
 </head>
 
-<body onload="S9WebGL.initialize()">
-
-     <!-- The Progress Dialog for loading resources -->
-    <div id="dialog-modal" title="Loading Resources">
-	    <div id="progressbar"></div>
-    </div>
-
-    <div class="container_16" id="mainLayout">
-        <div class="grid_3">&nbsp;</div>
-        <div class="grid_10">
-            <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
-        </div>
-        <div class="grid_1">
-     
-            <!-- Add some interaction sliders for moving things around -->
-          <div id="sliderX" class="ui-slider ui-slider-vertical ui-widget ui-widget-content ui-corner-all" 
-          style=" height:480px;">
-            <div class="ui-slider-range ui-widget-header" ></div>
-            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
-           
-           </div>
-           
-           <div id="sliderZoom" class="ui-slider ui-slider-vertical ui-widget ui-widget-content ui-corner-all" 
-          style=" height:70px; margin-top:20px;">
-            <div class="ui-slider-range ui-widget-header" ></div>
-            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
-           
-           </div>
-           
-           
-        </div>
-        <div class="clear"></div>
-        <div class="grid_3">&nbsp;</div>
-        <div class="grid_10">
-           <div id="sliderY" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all"
-           style="width:480px; margin-top: 20px;">
-            <div class="ui-slider-range ui-widget-header" ></div>
-            <a href="#" class="ui-slider-handle ui-state-default ui-corner-all" ></a>
-           
-           </div>
-        </div>
-    </div>
+<body onload="Saito.initialize()">
+    
+<div id="mainbody">        
+<canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
+</div>
 </body>
 
 </html>
