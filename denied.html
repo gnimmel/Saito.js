@@ -141,18 +141,18 @@ function grabFeeds() {
 	///\todo gradually fade in things here
 
 	$('#lefthand').empty();
-        var time = data['time'];
-        $('#lefthand').append("<p>" + time + "</p> <p>");
+        $('#lefthand').append("<p></p>");
+	var line = data['time'];
+	line += "<br/>";
         for (var i=0; i < 99; i = i + 3){
                 var c0 = countries[i];
                 var c1 = countries[i+1];
                 var c2 = countries[i+2];
-                var line = c0['city'] + " - " + c0['count'] + " " +
+                line += c0['city'] + " - " + c0['count'] + " " +
                  c1['city'] + " - " + c1['count'] + " " +
                  c2['city'] + " - " + c2['count'] + "<br/>";
-                $('#lefthand').append(line);
-        }
-	 $('#lefthand').append("</p>");
+         }
+	 $('#lefthand p').append(line);
 	
         $('#lefthand p').scrambledWriter(); 
 	
