@@ -140,8 +140,15 @@ function grabFeeds() {
 
 	///\todo gradually fade in things here
 
-	var time = date['time'];
-	$('#lefthand p').append(time);	
+	var time = data['time'];
+	$('#lefthand p').append(time);
+	$('#lefthand p').append('<br>');
+	for (var i=0; i < countries.length; i++){
+		$('#lefthand p').append(countries[i]['country'] + " - " + countries[i]['count']);
+		$('#lefthand p').append('<br>');
+
+	}
+
 
 	$('#lefthand p').typewriter();	
 
