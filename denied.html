@@ -133,8 +133,8 @@ function grabFeeds() {
 		country = countries[i];
 		var scale =  country['count'] / topcount;
 		var factor = (Math.log (scale) + 5.0 ) / 5.0; 
-
-		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.0,0.0,0.5 * factor));
+		
+		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.01,0.01,1.0));
 	}
     });
 	
@@ -162,13 +162,13 @@ $S.setup = function () {
 		grabFeeds()
 	}
 	else {
-		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.0,0.0,1.0));
+		curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.0,0.0,1.0));
+		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.01,0.01,1.0));
 	}
 
 	// Load the Cubemaps
 	textureCube = new SaitoTextureCube("textures/world_night_cube/cube","gif");
 	textureCubeBump = new SaitoTextureCube("textures/world_normal_cube/cube","gif");
-
 }	
 
 

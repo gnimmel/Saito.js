@@ -560,6 +560,7 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
 
 	var facing = $V([(sx + ex) / 2.0 , (sy + ey) / 2.0, (sz + ez)  / 2.0]);
 	facing = facing.toUnitVector();
+	//var facing = $V([0,0,1]);
 	var height = facing.x(bend);
 	
 	var c1 = s.add(dd);
