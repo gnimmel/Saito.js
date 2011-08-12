@@ -132,9 +132,9 @@ function grabFeeds() {
 	for (var i=0; i < countries.length; i++){
 		country = countries[i];
 		var scale =  country['count'] / topcount;
-		var factor = Math.pow (scale,5.0); 
-		
-		curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.01,0.01,1.0));
+		var factor = Math.pow (scale,2.5); 
+		if (factor > 0.2)
+			curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.01,0.01,1.0));
 	}
     });
 	
