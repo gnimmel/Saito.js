@@ -143,14 +143,14 @@ function grabFeeds() {
 	$('#lefthand').empty();
         $('#lefthand').append("<p></p>");
 	var line = data['time'];
-	line += "<br/>";
+	line += "\n";
         for (var i=0; i < 99; i = i + 3){
                 var c0 = countries[i];
                 var c1 = countries[i+1];
                 var c2 = countries[i+2];
                 line += c0['city'] + " - " + c0['count'] + " " +
                  c1['city'] + " - " + c1['count'] + " " +
-                 c2['city'] + " - " + c2['count'] + "<br/>";
+                 c2['city'] + " - " + c2['count'] + "\n";
          }
 	 $('#lefthand p').append(line);
 	
