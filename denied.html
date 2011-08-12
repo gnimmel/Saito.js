@@ -86,6 +86,7 @@ var worldShader;
 var basicShader;
 var cubemapShader;
 var curveShader;
+var plane;
 var textureCube;
 var textureCubeBump;
 var rotateX = 0;
@@ -172,6 +173,7 @@ function grabFeeds() {
 $S.setup = function () {
     
 	sphere = createSphere(60,60);
+	plane = createPlaneXAxis([3,3]);
        
 	// Ray Shader
 	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
@@ -225,7 +227,8 @@ $S.draw = function () {
 
 	var lightPos = $V([0.0, 0.0, -2.0]);
 	lightPos.x(Saito.prototype.modelViewMatrix); 
-
+	
+	plane.draw(basicShader);
 
 	mvPushMatrix();    
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
