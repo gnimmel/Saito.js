@@ -144,8 +144,8 @@ function grabFeeds() {
 	$('#lefthand').append("<p>" + time + "</p>");
 	for (var i=0; i < 60; i+=3){
 		$('#lefthand p').append("<p>" + countries[i]['city'] + " - " + countries[i]['count'] + " " +
-		 countries[i+1]['country'] + " - " + countries[i+1]['count'] + " " +
-		 countries[i+2]['country'] + " - " + countries[i+2]['count'] +
+		 countries[i+1]['city'] + " - " + countries[i+1]['count'] + " " +
+		 countries[i+2]['city'] + " - " + countries[i+2]['count'] +
 		"</p>");
 	}
 
