@@ -142,7 +142,7 @@ function grabFeeds() {
 
 	$('#lefthand').empty();
         $('#lefthand').append("<ul></ul>");
-	var line = "<li>" + data['time'] + "</li>";
+	var line = "<li class='cityline'>" + data['time'] + "</li>";
 	$('#lefthand ul').append(line);
 
         for (var i=0; i < 99; i = i + 3){
@@ -154,7 +154,7 @@ function grabFeeds() {
                  ' ' + c2['city'] + " - " + c2['count'] + "</li>");         
 	}
 		
-        $('#lefthand ul').scrambledWriter(); 
+        $('#lefthand ul li').scrambledWriter(); 
 	
 
     });
