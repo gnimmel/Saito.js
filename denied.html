@@ -149,11 +149,10 @@ function grabFeeds() {
                 var c0 = countries[i];
                 var c1 = countries[i+1];
                 var c2 = countries[i+2];
-                line = '<li class="cityline">' + c0['city'] + " - " + c0['count'] + " " +
+                $('#lefthand ul').append('<li class="cityline">' + c0['city'] + " - " + c0['count'] + " " +
                  ' ' + c1['city'] + " - " + c1['count'] +
-                 ' ' + c2['city'] + " - " + c2['count'] + "</li>";
-		 $('#lefthand ul').append(line);
-         }
+                 ' ' + c2['city'] + " - " + c2['count'] + "</li>");         
+	}
 		
         $('#lefthand ul').scrambledWriter(); 
 	
