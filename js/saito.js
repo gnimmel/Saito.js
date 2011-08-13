@@ -31,6 +31,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo fix the model loading
  * \todo handle the matrix funtions for setting up defaults
  * \todo lighting class that actually works with real gl lighting (and in the shader too) - if possible
+ * \todo simple colour class
  */
 
 /**
@@ -58,6 +59,7 @@ Saito.prototype = {
 	_setup : function() {
 		Saito.setup();    
         	setInterval(Saito.prototype._tick, 15);
+		Saito.totalTime = 0.0;
 
 	},
     	
@@ -68,6 +70,7 @@ Saito.prototype = {
 			Saito.elapsed = timeNow - Saito.lastTime;
         	}
         	Saito.lastTime  = timeNow;
+		Saito.totalTime += Saito.elapsed;
 	
 		Saito.prototype._update();
 		Saito.prototype._draw();  
@@ -345,6 +348,7 @@ SaitoShader.prototype.getAttribArray = function(name) {
 
 SaitoShader.prototype.setActive = function() {
 	if (this.shaderProgram != undefined){
+		Saito.currentShader = this;
 		gl.useProgram(this.shaderProgram);
 	}
 }
@@ -355,6 +359,7 @@ SaitoShader.prototype.setActive = function() {
 
 
 SaitoShader.prototype.setInactive = function() {
+	Saito.currentShader = null;
 	gl.useProgram(null);
 }
 
@@ -373,14 +378,14 @@ SaitoTexture = function(path) {
 	Saito.resources++;
 	var obj = this;
 	
-	texImage.onload = function() {
+	this.texImage.onload = function() {
 		Saito.resources--;
         
             	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             	gl.bindTexture(gl.TEXTURE_2D,obj.texture);
             	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texture.image);
             	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             	gl.generateMipmap(gl.TEXTURE_2D);
             	gl.bindTexture(gl.TEXTURE_2D, null);
     	}
@@ -614,18 +619,20 @@ function Primitive() {
 	this.vertexPositionBuffer       = gl.createBuffer();
 	this.vertexNormalBuffer         = gl.createBuffer();
 	this.vertexTextureCoordBuffer   = gl.createBuffer();
-	this.vertexColorBuffer          = gl.createBuffer();
+	this.vertexColourBuffer        	= gl.createBuffer();
 	this.vertexIndexBuffer          = gl.createBuffer();
 	this.drawPrimitive		= gl.TRIANGLES;
 	this.vertexTangentBuffer	= gl.createBuffer();
 
 
 
-	this.draw = function (shader) {
+	this.draw = function() {
     				
 		/// \todo Bind Buffers - This really should be done just once but its nice to have it here now. 
 		/// \todo The Attribs are set here which isn't good as it needs to be the same in the shader
-					
+			
+		if (Saito.currentShader != null && Saito.currentShader != undefined) {
+		var shader = Saito.currentShader;		
 		var aTextureCoord = shader.getAttribArray("aTextureCoord");
 		var aVertexPosition = shader.getAttribArray("aVertexPosition");     
 		var aVertexNormal = shader.getAttribArray("aVertexNormal");     
@@ -647,8 +654,8 @@ function Primitive() {
 		
 		if (aVertexColour != -1 && aVertexColour != undefined) {
 			gl.enableVertexAttribArray(aVertexColour);
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexColorBuffer);
-			gl.vertexAttribPointer(aVertexColour, this.vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexColourBuffer);
+			gl.vertexAttribPointer(aVertexColour, this.vertexColourBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
 
 		if (aVertexPosition!= -1 && aVertexPosition != undefined) {
@@ -663,14 +670,47 @@ function Primitive() {
 			gl.vertexAttribPointer(aVertexTangent, this.vertexTangentBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
 
-
-
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 		setMatrixUniforms(shader);
 		gl.drawElements(this.drawPrimitive, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT,0);
+		}
 
    	}
 }
+
+/**
+ * A simple Colour class
+ */
+
+
+Colour = function(r,g,b,a) {
+	this.r = r;
+	this.g = g;
+	this.b = b;
+	this.a = a;
+}
+
+Colour.prototype.asArray = function() {
+	var ar = new Array();
+	ar.push(this.r);
+	ar.push(this.g);
+	ar.push(this.b);
+	ar.push(this.a);
+	return ar;
+}
+
+/**
+ * A few size classes
+ */
+
+
+Size2 = function(w,h) {
+	this.w = w;
+	this.h = h;
+	this.v = $V([w,h]);
+}
+
+
 
 
 

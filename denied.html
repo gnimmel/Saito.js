@@ -83,17 +83,17 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 var sphere;
 var worldShader;
-var basicShader;
-var cubemapShader;
+var planeShader;
 var curveShader;
 var plane;
 var textureCube;
+var textureRadial;
 var textureCubeBump;
 var rotateX = 0;
 var rotateY = 0;
 var zoom = 3.5;
 var curves = new Array();
-var test = false;
+var test = true;
 var testcurve;
 
 
@@ -136,7 +136,7 @@ function grabFeeds() {
 		var scale =  country['count'] / topcount;
 		var factor = Math.pow (scale,1.5); 
 		if (factor > 0.02)
-			curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.01,0.01,1.0));
+			curves.push( createWorldCurveCube(50,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.5,0.01,1.0));
 	}
 
 	///\todo gradually fade in things here
@@ -173,25 +173,26 @@ function grabFeeds() {
 $S.setup = function () {
     
 	sphere = createSphere(60,60);
-	plane = createPlaneXAxis([3,3]);
+	plane = createPlane( new Size2(12,12), new Colour(0.1,0.9,1.0,1.0));
        
 	// Ray Shader
 	worldShader = new SaitoShader("shaders/world-vs.txt", "shaders/world-fs.txt");
-	basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
-	cubemapShader = new SaitoShader("shaders/cubemap-vs.txt", "shaders/cubemap-fs.txt");
+	planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
 	curveShader = new SaitoShader("shaders/curve-vs.txt", "shaders/curve-fs.txt");
 	
 	if (test == false) {
 		grabFeeds();
 	}
 	else {
-		curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.0,0.0,1.0));
-		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.01,0.01,1.0));
+		curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.5,0.01,1.0));
+		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.5,0.01,1.0));
 	}
 
 	// Load the Cubemaps
 	textureCube = new SaitoTextureCube("textures/world_night_cube/cube","gif");
 	textureCubeBump = new SaitoTextureCube("textures/world_normal_cube/cube","gif");
+
+	textureRadial = new SaitoTexture("textures/radial.png");
 }	
 
 
@@ -225,10 +226,27 @@ $S.draw = function () {
 
 	mvTranslate([0.0, 0.0, -zoom]);
 
-	var lightPos = $V([0.0, 0.0, -2.0]);
+	var lightPos = $V([0.0, 0.0, 3.0 ]);
 	lightPos.x(Saito.prototype.modelViewMatrix); 
 	
-	plane.draw(basicShader);
+	// Back Plane
+	mvPushMatrix();
+	mvTranslate([0.0,0.0,-5.0]);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+	planeShader.setActive();
+	planeShader.setUniform1i("uSampler", 0);
+	planeShader.setUniform1f("uTime",  $S.totalTime / 1000);
+	textureRadial.bind();
+	plane.draw();
+	textureRadial.unbind();
+	planeShader.setInactive();
+
+	gl.disable(gl.BLEND);
+
+	mvPopMatrix();
+
 
 	mvPushMatrix();    
  	mvRotate(rotateX,[1.0,0.0,0.0]); 
@@ -238,11 +256,11 @@ $S.draw = function () {
 	// Now draw the world
 
 	worldShader.setActive();
-	worldShader.setUniform3f("uMaterialAmbientColor", 0.4,0.2,0.2 );
-	worldShader.setUniform3f("uMaterialDiffuseColor", 0.2,0.3,1.0 );
+	worldShader.setUniform3f("uMaterialAmbientColor", 0.4,0.4,0.5 );
+	worldShader.setUniform3f("uMaterialDiffuseColor", 1.0,1.0,1.0 );
 	worldShader.setUniform3f("uMaterialSpecularColor", 1.0,1.0,1.0 );
 	worldShader.setUniform3f("uMaterialEmissiveColor", 0.0,0.0,0.1 );
-	worldShader.setUniform1f("uMaterialShininess", 10.0);
+	worldShader.setUniform1f("uMaterialShininess", 4.0);
 
 	worldShader.setUniform3f("uAmbientLightingColor", 0.1,0.1,0.1 );
 	worldShader.setUniform3f("uPointLightingLocation", lightPos.e(1), lightPos.e(2), lightPos.e(3));
@@ -251,30 +269,32 @@ $S.draw = function () {
 	worldShader.setUniform1i("uSampler", 0);
 	worldShader.setUniform1i("uSamplerBump", 1);
 
+
 	gl.activeTexture(gl.TEXTURE0);
     	textureCube.bind();
 	gl.activeTexture(gl.TEXTURE1);
 	textureCubeBump.bind();
 
-	sphere.draw(worldShader);
+	sphere.draw();
 	textureCube.unbind();
 	worldShader.setInactive();
 
+	gl.activeTexture(gl.TEXTURE0);
+
+
 	// Enable Blending
 	gl.enable(gl.BLEND);
-//	gl.disable(gl.DEPTH_TEST);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 	curveShader.setActive();    
 
 	// Now draw the curves but rotate and translate so they match the sphere
 	mvPushMatrix();	
 	for (var i=0; i < curves.length; i++){
-		curves[i].draw(curveShader);
+		curves[i].draw();
 	}
 	curveShader.setInactive();
 	
 	mvPopMatrix();
-//	gl.enable(gl.DEPTH_TEST);
 	gl.disable(gl.BLEND);
 
 	mvPopMatrix();
