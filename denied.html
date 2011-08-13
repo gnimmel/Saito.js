@@ -348,7 +348,7 @@ $S.draw = function () {
 <body onload="Saito.initialize()">
     
 <header>
-	<div id="title"><h1>DENIED&#33;</h1><br/><h3>A hosts.deny visualisation using saito.js</h3></div>  
+	<div id="title"><h1>DENIED&#33;</h1><h3>A hosts.deny visualisation using saito.js</h3></div>  
 </header>
 
 <div id ="lefthand">
@@ -356,16 +356,24 @@ $S.draw = function () {
 </div>
 
 <div id ="righthand">
-	<p>This is a visualisation of the hosts.deny report generated for <a href="http://www.section9.co.uk">http://www.section9.co.uk</a></p>
+	<p>This is a visualisation of the hosts.deny report generated for http://www.section9.co.uk. Every minute a cron job parses the hosts.deny file and cross references the ip addresses with the GeoLiteCity data file. Each minute a python script is called (running with uwsgi) to parse this file and return some json. This is then fed into saito.js and WebGL.</p>
+<br/>
+<p>On the left hand side are the top 99 cities that are trying to do naughty things with my server. Clearly Beijing is way out in front.</p>
+<br/>
+
+<p>At the moment, saito.js is at version 0.2 but I am still developing for it. This particular example seems to run better on Firefox than Chrome at the moment but it is shifting an awful lot of triangles (more than it should probably).</p>
 </div>
 
 <footer>
-<p>credits: http://onehackoranother.com/projects/jquery/jquery-grab-bag/text-effects.html</p>
+<p>credits: <a href="http://www.section9.co.uk">section9.co.uk</a> &dash; <a href="http://onehackoranother.com/projects/jquery/jquery-grab-bag/text-effects.html">JQuery Grab Bag</a> &dash; <a href="http://html5boilerplate.com/">HTML5 Boilerplate</a> &dash; <a href="http://jquery.com/">jquery</a> &dash; <a href="http://sylvester.jcoglan.com/">sylvester</a> &dash; <a href="http://www.maxmind.com/app/geolitecity">geolitecity</a></p>
 </footer>
 
 <div id="mainbody" role="main">      
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
 </div>
+
+
+<a href="http://github.com/OniDaito"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/4c7dc970b89fd04b81c8e221ba88ff99a06c6b61/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub"></a>
 
 <script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
 <script type="text/javascript">
