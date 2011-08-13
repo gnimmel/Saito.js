@@ -117,9 +117,12 @@ Saito.mouseScrollUp = function() {
  * Grab feeds from the webserver and create a set of curves 
  */
 
-//window.setInterval(grabFeeds, 3000);
+window.setInterval(grabFeeds, 3000);
 
 function grabFeeds() { 
+
+
+	if (test == false) {
 
     $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
         var countries = data['entries'];
@@ -159,6 +162,12 @@ function grabFeeds() {
 	
 
     });
+}
+else{
+	curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.5,0.01,1.0));
+	curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.5,0.01,1.0));
+
+}
 	
 }
 
@@ -180,19 +189,17 @@ $S.setup = function () {
 	planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
 	curveShader = new SaitoShader("shaders/curve-vs.txt", "shaders/curve-fs.txt");
 	
-	if (test == false) {
-		grabFeeds();
-	}
-	else {
-		curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.5,0.01,1.0));
-		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.5,0.01,1.0));
-	}
+	grabFeeds();
 
 	// Load the Cubemaps
 	textureCube = new SaitoTextureCube("textures/world_night_cube/cube","gif");
 	textureCubeBump = new SaitoTextureCube("textures/world_normal_cube/cube","gif");
 
 	textureRadial = new SaitoTexture("textures/radial.png");
+
+	// None GL related
+	$('#righthand p').scrambledWriter(); 
+
 }	
 
 
@@ -286,9 +293,11 @@ $S.draw = function () {
 
 	// Enable Blending
 	gl.enable(gl.CULL_FACE);
+	gl.cullFace(gl.BACK);
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-	curveShader.setActive();    
+	curveShader.setActive();   
+	curveShader.setUniform1f("uTime", $S.totalTime / 1000);
 
 	// Now draw the curves but rotate and translate so they match the sphere
 	mvPushMatrix();	
@@ -312,12 +321,20 @@ $S.draw = function () {
 <body onload="Saito.initialize()">
     
 <header>
-	<div id="title"><h1>DENIED</h1></div>  
+	<div id="title"><h1>DENIED&#33;</h1><br/><h3>A hosts.deny visualisation using saito.js</h3></div>  
 </header>
 
 <div id ="lefthand">
 	<p></p>
 </div>
+
+<div id ="righthand">
+	<p>This is a visualisation of the hosts.deny report generated for <a href="http://www.section9.co.uk">http://www.section9.co.uk</a></p>
+</div>
+
+<footer>
+<p>credits: http://onehackoranother.com/projects/jquery/jquery-grab-bag/text-effects.html</p>
+</footer>
 
 <div id="mainbody" role="main">      
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>

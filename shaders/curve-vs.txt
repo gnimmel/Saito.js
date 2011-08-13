@@ -8,9 +8,11 @@ uniform mat4 uNormalMatrix;
 
 varying vec4 vColor;
 varying vec4 vTransformedNormal;
+varying vec4 vPosition;
 
 void main(void) {
 	gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+	vPosition =  vec4(aVertexPosition, 1.0);
 	vColor = aVertexColour;
 	vTransformedNormal =  uNormalMatrix * vec4(aVertexNormal, 1.0);
 
