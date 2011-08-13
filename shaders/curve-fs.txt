@@ -3,7 +3,16 @@ precision highp float;
 #endif
 
 varying vec4 vColor;
+varying vec4 vPosition;
+
+uniform float uTime;
 
 void main(void) {
-    gl_FragColor = vColor;
+
+	vec4 c = vPosition;
+	float d = 40.0/length(c);	
+
+	float period = (sin( uTime + d) + 1.0) / 2.0;
+
+	gl_FragColor = vColor * period;
 }
