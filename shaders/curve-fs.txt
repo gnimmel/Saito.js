@@ -6,6 +6,7 @@ varying vec4 vColor;
 varying vec4 vPosition;
 
 uniform float uTime;
+uniform float uAlpha;
 
 void main(void) {
 
@@ -14,5 +15,5 @@ void main(void) {
 
 	float period = (sin( uTime + d) + 1.0) / 2.0;
 
-	gl_FragColor = vColor * period;
+	gl_FragColor = vec4(vColor.rgb,uAlpha) * period;
 }
