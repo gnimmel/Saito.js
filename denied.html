@@ -85,6 +85,8 @@ var sphere;
 var worldShader;
 var planeShader;
 var curveShader;
+var fadeStatus = 0; // -1 fadeout, +1 fadein
+var curveAlpha = 0.0;
 var plane;
 var textureCube;
 var textureRadial;
@@ -117,61 +119,74 @@ Saito.mouseScrollUp = function() {
  * Grab feeds from the webserver and create a set of curves 
  */
 
-window.setInterval(grabFeeds, 3000);
+window.setInterval(checkCurves, 60 * 1000);
 
 function grabFeeds() { 
-
-	curves.length = 0;
-
+	
 	if (test == false) {
 
-    $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
-        var countries = data['entries'];
-	var topcount = 0;	
+	    $.getJSON('http://saito.section9.co.uk/denied.json', function(data) {
+		curves.length = 0; // Clear Curves
+		var countries = data['entries'];
+		var topcount = 0;	
 
-	// First, get the highest amount and scale all subsequent results accordingly
-	for (var i=0; i < countries.length; i++){
-		if (countries[i].count > topcount) topcount = countries[i].count;
-	}
-	
-
-	for (var i=0; i < countries.length; i++){
-		country = countries[i];
-		var scale =  country['count'] / topcount;
-		var factor = Math.pow (scale,1.5); 
-		if (factor > 0.02)
-			curves.push( createWorldCurveCube(51,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.5,0.01,1.0));
-	}
-
-	///\todo gradually fade in things here
-
-	$('#lefthand').empty();
-        $('#lefthand').append("<ul></ul>");
-	var line = "<li class='cityline'>" + data['time'] + "</li>";
-	$('#lefthand ul').append(line);
-
-        for (var i=0; i < 99; i = i + 3){
-                var c0 = countries[i];
-                var c1 = countries[i+1];
-                var c2 = countries[i+2];
-                $('#lefthand ul').append('<li class="cityline">' + c0['city'] + " - " + c0['count'] + " " +
-                 ' ' + c1['city'] + " - " + c1['count'] +
-                 ' ' + c2['city'] + " - " + c2['count'] + "</li>");         
-	}
+		// First, get the highest amount and scale all subsequent results accordingly
+		for (var i=0; i < countries.length; i++){
+			if (countries[i].count > topcount) topcount = countries[i].count;
+		}
 		
-        $('#lefthand ul li').scrambledWriter(); 
-	
 
-    });
-}
-else{
-	curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.5,0.01,1.0));
-	curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.5,0.01,1.0));
+		for (var i=0; i < countries.length; i++){
+			country = countries[i];
+			var scale =  country['count'] / topcount;
+			var factor = Math.pow (scale,1.5); 
+			if (factor > 0.02)
+				curves.push( createWorldCurveCube(51,0,country['lat'],country['lon'],0.5,20, 0.02 * factor,1.0,0.5,0.01,1.0));
+		}
+
+		///\todo gradually fade in things here
+
+		$('#lefthand').empty();
+		$('#lefthand').append("<ul></ul>");
+		var line = "<li class='cityline'>" + data['time'] + "</li>";
+		$('#lefthand ul').append(line);
+
+		for (var i=0; i < 99; i = i + 3){
+			var c0 = countries[i];
+			var c1 = countries[i+1];
+			var c2 = countries[i+2];
+			$('#lefthand ul').append('<li class="cityline">' + c0['city'] + " - " + c0['count'] + " " +
+			 ' ' + c1['city'] + " - " + c1['count'] +
+			 ' ' + c2['city'] + " - " + c2['count'] + "</li>");         
+		}
+			
+		$('#lefthand ul li').scrambledWriter(); 
+
+		fadeStatus = 1;
+
+	    });
+	}
+	else{
+		curves.length = 0;
+		curves.push(createWorldCurveCube(50,0,40,28,0.5,20,0.02,1.0,0.5,0.01,1.0));
+		curves.push(createCurveCube($V([1,0,0]),$V([0,1,0]),$V([1.75,1.25,0]),$V([1.25,1.75,0]),$V([0,0,1]),20,0.02,1.0,0.5,0.01,1.0));
+		fadeStatus = 1;
+	}
+
 
 }
-	
-}
 
+
+/**
+ * Check Curves starts and stops fade
+ */
+
+function checkCurves() {
+	fadeStatus = -1;
+	if (curveAlpha <= 0.0){
+		grabFeeds();
+	}
+}
 
 
 /**
@@ -210,10 +225,20 @@ $S.setup = function () {
  */
 
 $S.update = function () {
-    if ($S.mouseDown){
-        rotateX += ($S.mouseY - $S.mouseYprev) * 180;
-        rotateY += ($S.mouseX - $S.mouseXprev) * 180;
-    } 
+	if ($S.mouseDown){
+        	rotateX += ($S.mouseY - $S.mouseYprev) * 180;
+        	rotateY += ($S.mouseX - $S.mouseXprev) * 180;
+    	} 
+	if ((curveAlpha == 1.0 && fadeStatus == 1) || (curveAlpha == 0.0 && fadeStatus == -1)) {
+		fadeStatus = 0;
+	}
+	if (fadeStatus == -1 && curveAlpha > 0.0) {
+		curveAlpha -= $S.elapsed / 3000;
+	}
+	if (fadeStatus == 1 && curveAlpha < 1.0) {
+		curveAlpha += $S.elapsed / 3000;
+	}
+
 } 
 
 
@@ -299,6 +324,7 @@ $S.draw = function () {
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 	curveShader.setActive();   
 	curveShader.setUniform1f("uTime", $S.totalTime / 1000);
+	curveShader.setUniform1f("uAlpha", curveAlpha);
 
 	// Now draw the curves but rotate and translate so they match the sphere
 	mvPushMatrix();	
