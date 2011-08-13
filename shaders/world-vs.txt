@@ -40,9 +40,6 @@ void main(void) {
 	vLightDir.y = dot(tmpVec, b);
 	vLightDir.z = dot(tmpVec, vTransformedNormal.xyz);
 
-	// Normalize the lightdir for now so we dont get nasty affects
-	//vLightDir  = normalize(vLightDir);
-
 	
 	tmpVec = -vPosition.xyz;
 	vEyeDir.x = dot(tmpVec, t);

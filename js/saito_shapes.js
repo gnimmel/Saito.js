@@ -150,8 +150,8 @@ function createCuboid(width,height,depth) {
     cube.vertexIndexBuffer.numItems = 36;
     
     
-    gl.bindBuffer(gl.ARRAY_BUFFER, cube.vertexColorBuffer);
-    var colors = [
+    gl.bindBuffer(gl.ARRAY_BUFFER, cube.vertexColourBuffer);
+    var colours = [
       [1.0, 0.0, 0.0, 1.0],     // Front face
       [1.0, 1.0, 0.0, 1.0],     // Back face
       [0.0, 1.0, 0.0, 1.0],     // Top face
@@ -159,16 +159,16 @@ function createCuboid(width,height,depth) {
       [1.0, 0.0, 1.0, 1.0],     // Right face
       [0.0, 0.0, 1.0, 1.0],     // Left face
     ];
-    var unpackedColors = []
-    for (var i in colors) {
-      var color = colors[i];
+    var unpackedColours = []
+    for (var i in colours) {
+      var colour = colours[i];
       for (var j=0; j < 4; j++) {
-        unpackedColors = unpackedColors.concat(color);
+        unpackedColours = unpackedColours.concat(colour);
       }
     }
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
-    cube.vertexColorBuffer.itemSize = 4;
-    cube.vertexColorBuffer.numItems = 24;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColours), gl.STATIC_DRAW);
+    cube.vertexColourBuffer.itemSize = 4;
+    cube.vertexColourBuffer.numItems = 24;
 
     return cube;
 }
@@ -186,7 +186,7 @@ function createSphere(latitudeBands,longitudeBands) {
     var vertexPositionData = [];
     var normalData = [];
     var textureCoordData = [];
-    var colorData = [];
+    var colourData = [];
 	var tangentData = [];
     
     for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
@@ -209,10 +209,10 @@ function createSphere(latitudeBands,longitudeBands) {
         normalData.push(y);
         normalData.push(z);
         
-        colorData.push(1.0);
-        colorData.push(1.0);
-        colorData.push(1.0);
-        colorData.push(1.0);
+        colourData.push(1.0);
+        colourData.push(1.0);
+        colourData.push(1.0);
+        colourData.push(1.0);
         
         textureCoordData.push(u);
         textureCoordData.push(v);
@@ -280,11 +280,11 @@ function createSphere(latitudeBands,longitudeBands) {
     sphere.vertexIndexBuffer.numItems = indexData.length;
     
     
-    gl.bindBuffer(gl.ARRAY_BUFFER, sphere.vertexColorBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, sphere.vertexColourBuffer);
    
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW);
-    sphere.vertexColorBuffer.itemSize = 4;
-    sphere.vertexColorBuffer.numItems = colorData.length;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colourData), gl.STATIC_DRAW);
+    sphere.vertexColourBuffer.itemSize = 4;
+    sphere.vertexColourBuffer.numItems = colourData.length;
 
     return sphere;
 
@@ -357,13 +357,13 @@ function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 	}
  
     
-	var colors = [];
+	var colours = [];
     
   	for (var i=0; i < segments * 2; i ++){
-   		colors.push(r);
-   		colors.push(g);
-   		colors.push(b);
-   		colors.push(a);
+   		colours.push(r);
+   		colours.push(g);
+   		colours.push(b);
+   		colours.push(a);
    	}
    	
    	var curveVertexIndices = [];
@@ -377,10 +377,10 @@ function createCurve(start, end, c0, c1, facing, segments, w, r,g,b,a) {
     	curve.vertexPositionBuffer.itemSize = 3;
     	curve.vertexPositionBuffer.numItems = vertices.length / 3;
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColorBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-	curve.vertexColorBuffer.itemSize = 4;
-	curve.vertexColorBuffer.numItems = colors.length / 4;
+	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColourBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colours), gl.STATIC_DRAW);
+	curve.vertexColourBuffer.itemSize = 4;
+	curve.vertexColourBuffer.numItems = colours.length / 4;
     
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
@@ -504,19 +504,19 @@ function createCurveCube(start, end, c0, c1, facing, segments, w, r,g,b,a) {
 	curve.vertexPositionBuffer.itemSize = 3;
 	curve.vertexPositionBuffer.numItems = vertices.length / 3;
 
-	var colors = [];
+	var colours = [];
     
   	for (var i=0; i < vertices.length; i++){
-   		colors.push(r);
-   		colors.push(g);
-   		colors.push(b);
-   		colors.push(a);
+   		colours.push(r);
+   		colours.push(g);
+   		colours.push(b);
+   		colours.push(a);
    	}
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColorBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-	curve.vertexColorBuffer.itemSize = 4;
-	curve.vertexColorBuffer.numItems = colors.length / 4;
+	gl.bindBuffer(gl.ARRAY_BUFFER, curve.vertexColourBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colours), gl.STATIC_DRAW);
+	curve.vertexColourBuffer.itemSize = 4;
+	curve.vertexColourBuffer.numItems = colours.length / 4;
     
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, curve.vertexIndexBuffer);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(curveVertexIndices), gl.STATIC_DRAW);
@@ -576,55 +576,86 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
  * create Plane with a size aligned on the X Axis, size being a 2 size array
  */
 
-function createPlaneXAxis(size) {
 
-	var plane =  new Primitive();
 
-	// Vertices
+function createPlane(size,colour) {
+
+	var plane = new Primitive;
+   
 	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexPositionBuffer);
+   
+	width = size.w / 2;
+	height = size.h / 2;
+	depth = 0;
+     
+	vertices = [
+		-width, -height,  depth,
+       		width, -height,  depth,
+       		width,  height,  depth,
+      		-width,  height,  depth,
+    	];
     
-  	var vertices = [];
-	var vert1 = $V([size[0],0,size[1]]);
-	var vert2 = $V([-size[0],0,size[1]]);
-	var vert3 = $V([-size[0],0,-size[1]]);
-	var vert4 = $V([size[0],0,-size[1]]);
-
-	vertices.push(vert1.e(1)); vertices.push(vert1.e(2)); vertices.push(vert1.e(3));
-	vertices.push(vert2.e(1)); vertices.push(vert2.e(2)); vertices.push(vert2.e(3));
-	vertices.push(vert3.e(1)); vertices.push(vert3.e(2)); vertices.push(vert3.e(3));
-	vertices.push(vert4.e(1)); vertices.push(vert4.e(2)); vertices.push(vert4.e(3));
-	
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-	plane.vertexPositionBuffer.itemSize = 3;
+    	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    
+    	plane.vertexPositionBuffer.itemSize = 3;
     	plane.vertexPositionBuffer.numItems = 4;
-
-	// Normals
-	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexNormalBuffer);
     
-  	var normals = [];
-	var normal = $V([0,1,0]);
-	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
-	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
-	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
-	vertices.push(normal.e(1)); vertices.push(normal.e(2)); vertices.push(normal.e(3));
+    	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexNormalBuffer);
 
+	var vertexNormals = [
+      	// Front face
+       		0.0,  0.0,  1.0,
+       		0.0,  0.0,  1.0,
+      	 	0.0,  0.0,  1.0,
+       		0.0,  0.0,  1.0
+        ];
+        
 
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 	plane.vertexNormalBuffer.itemSize = 3;
-    	plane.vertexNormalBuffer.numItems = 4;
-
-	var indexData = [];
-	indexData.push(0);
-	indexData.push(1);
-	indexData.push(2);
-	indexData.push(3);
-
-
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.vertexIndexBuffer);
-    	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);
-    	plane.vertexIndexBuffer.itemSize = 1;
-    	plane.vertexIndexBuffer.numItems = indexData.length;
+ 	plane.vertexNormalBuffer.numItems = 4;
     
+	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexTextureCoordBuffer);
+    	var textureCoords = [
+      		0.0, 0.0,
+     	 	1.0, 0.0,
+      		1.0, 1.0,
+      		0.0, 1.0,
+        ];
+
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+	plane.vertexTextureCoordBuffer.itemSize = 2;
+	plane.vertexTextureCoordBuffer.numItems = 4;
+    
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.vertexIndexBuffer);
+	var cubeVertexIndices = [
+      		0, 1, 2,      0, 2, 3,    // Front face
+       	];
+    
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+	plane.vertexIndexBuffer.itemSize = 1;
+	plane.vertexIndexBuffer.numItems = 6;
+    
+    
+	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexColourBuffer);
+
+	var ar = colour.asArray();
+	
+	var colours = [ar];
+
+    	var unpackedColours = []
+    	for (var i in colours) {
+      		var c = colours[i];
+      		for (var j=0; j < 4; j++) {
+        		unpackedColours = unpackedColours.concat(c);
+      		}
+    	}
+	
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColours), gl.STATIC_DRAW);
+	plane.vertexColourBuffer.itemSize = 4;
+	plane.vertexColourBuffer.numItems = 4;
+
 	return plane;
 
 }

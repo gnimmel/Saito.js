@@ -1,0 +1,21 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec4 vColor;
+varying vec2 vTexCoord;
+
+uniform sampler2D uSampler;
+uniform float uTime;
+
+void main(void) {
+	
+	vec2 c = vTexCoord;
+	c = c * 2.0;
+ 	c = c -1.0;
+	float d = 0.5/length(c);	
+
+	float period = (sin( uTime + d) + 1.0) / 2.0;
+
+	gl_FragColor = vColor * texture2D(uSampler,vTexCoord);
+}
