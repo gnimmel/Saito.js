@@ -95,8 +95,15 @@ var rotateX = 0;
 var rotateY = 0;
 var zoom = 3.5;
 var curves = new Array();
-var test = true;
+var test = false;
 var testcurve;
+
+jQuery.fn.center = function () {
+    this.css("position","absolute");
+    this.css("top", (($(window).height() - this.outerHeight()) / 2) + $(window).scrollTop() + "px");
+    this.css("left", (($(window).width() - this.outerWidth()) / 2) + $(window).scrollLeft() + "px");
+    return this;
+}
 
 
 /**
@@ -119,7 +126,7 @@ Saito.mouseScrollUp = function() {
  * Grab feeds from the webserver and create a set of curves 
  */
 
-window.setInterval(checkCurves, 60 * 1000);
+window.setInterval(checkCurves, 20 * 1000);
 
 function grabFeeds() { 
 	
@@ -183,9 +190,9 @@ function grabFeeds() {
 
 function checkCurves() {
 	fadeStatus = -1;
-	if (curveAlpha <= 0.0){
+	//if (curveAlpha <= 0.0){
 		grabFeeds();
-	}
+	//}
 }
 
 
@@ -196,7 +203,8 @@ function checkCurves() {
 
 
 $S.setup = function () {
-    
+	$("#loader").show();
+   	$("#loader").center();
 	sphere = createSphere(60,60);
 	plane = createPlane( new Size2(12,12), new Colour(0.1,0.9,1.0,1.0));
        
@@ -225,6 +233,9 @@ $S.setup = function () {
  */
 
 $S.update = function () {
+	if ($S.resources == 0){
+		$("#loader").hide();
+	}
 	if ($S.mouseDown){
         	rotateX += ($S.mouseY - $S.mouseYprev) * 180;
         	rotateY += ($S.mouseX - $S.mouseXprev) * 180;
@@ -353,6 +364,11 @@ $S.draw = function () {
 
 <div id ="lefthand">
 	<p></p>
+</div>
+
+<div id ="loader">
+	<img src="http://saito.section9.co.uk/loader.gif" alt="Loading Textures" />
+	<p>loading textures and shaders</p>
 </div>
 
 <div id ="righthand">

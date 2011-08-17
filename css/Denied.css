@@ -89,3 +89,15 @@ footer {
 footer a {
 	color: white;
 }
+
+#loader {
+	display: hidden;
+	width: 80px;
+	text-align: center;
+}
+
+#loader p {
+	color: black;
+	font-family: 'courier', serif;
+        font-size: 10px;
+}
