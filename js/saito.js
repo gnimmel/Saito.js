@@ -7,7 +7,7 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.02
+SAITO.JS  v.3
 
 Benjamin Blundell
 
@@ -20,6 +20,7 @@ Based on the excellent work from:
 * Learning WebGL - http://learningwebgl.com/
 * JQuery and JQueryUI - http://jquery.com/
 * Sylvester Maths Library - http://sylvester.jcoglan.com/
+* Termlib - http://www.masswerk.at/termlib/
 
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
@@ -680,6 +681,7 @@ function Primitive() {
 
 /**
  * A simple Colour class
+ * Takes four floats 0 - 1.0 
  */
 
 
@@ -709,8 +711,6 @@ Size2 = function(w,h) {
 	this.h = h;
 	this.v = $V([w,h]);
 }
-
-
 
 
 
