@@ -2,6 +2,9 @@
 
 # A simple Python script to optimise saito.js
 
+# Need to compress ALL javascript files and the embedded stuff in one
+# Potentially pull in shaders as well
+
 import httplib, urllib
 
 f = open('../js/saito.js')

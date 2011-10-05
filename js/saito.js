@@ -32,7 +32,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo fix the model loading
  * \todo handle the matrix funtions for setting up defaults
  * \todo lighting class that actually works with real gl lighting (and in the shader too) - if possible
- * \todo simple colour class
+ * \todo FBO!!!
  */
 
 /**
@@ -108,8 +108,6 @@ Saito.prototype = {
 	getHeight : function () {
 		return Saito.canvas.height;
 	}
-
-	
 };
 
 /**
@@ -137,15 +135,18 @@ Saito.initialize = function(){
         	gl.viewportWidth = Saito.width = this.canvas.width;
         	gl.viewportHeight = Saito.height = this.canvas.height;
       
-               	this.activeShader = "none";
+      		this.activeShader = "none";
 
-  		// Add the mouse handler
+  			// Add the mouse handler
         	setMouseHandler();
 
+        	// Set keyboard handler
+        	setKeyboardHandler();
+
 		/// OpenGL Constants \todo remove eventually
-		gl.clearDepth(1.0);
-		gl.enable(gl.DEPTH_TEST);
-		gl.depthFunc(gl.LEQUAL);
+			gl.clearDepth(1.0);
+			gl.enable(gl.DEPTH_TEST);
+			gl.depthFunc(gl.LEQUAL);
        		this.prototype._setup();		
 
     	} catch(e) {
@@ -382,14 +383,14 @@ SaitoTexture = function(path) {
 	this.texImage.onload = function() {
 		Saito.resources--;
         
-            	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            	gl.bindTexture(gl.TEXTURE_2D,obj.texture);
-            	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texture.image);
-            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            	gl.generateMipmap(gl.TEXTURE_2D);
-            	gl.bindTexture(gl.TEXTURE_2D, null);
-    	}
+    	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    	gl.bindTexture(gl.TEXTURE_2D,obj.texture);
+    	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texture.image);
+    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    	gl.generateMipmap(gl.TEXTURE_2D);
+    	gl.bindTexture(gl.TEXTURE_2D, null);
+    }
 	
 }
 
@@ -605,7 +606,19 @@ function setMouseHandler() {
 			if (Saito.mouseScrollDown != undefined) { Saito.mouseScrollDown(); }
 		}        
 	});  
-   
+}
+
+/**
+ * Set the kayboard handler for various events
+ */
+
+function setKeyboardHandler() {
+	console.log(Saito.canvas);
+	$(Saito.canvas).keydown(function(event) {
+	//	if (Saito.keyboardPressed != null){
+			Saito.keyboardPressed(event);
+	//	}
+	});
 }
 
 /**
@@ -678,6 +691,67 @@ function Primitive() {
 
    	}
 }
+
+/** 
+ * Framebuffer related functions and classes
+ * So far, this doesnt take any options for the texture. Creates linear filtering
+ * attaches a 16bit depth buffer as well
+ * \todo - deal with resizing
+ */
+
+SaitoFrameBuffer = function(w,h) {
+	this.width = w;
+	this.height = h;
+
+	
+	this.rttFramebuffer = gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, this.rttFramebuffer);
+    this.rttFramebuffer.width = this.width;
+    this.rttFramebuffer.height = this.height;
+
+	this.rttTexture = gl.createTexture();
+	
+	gl.bindTexture(gl.TEXTURE_2D, this.rttTexture);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+	//gl.generateMipmap(gl.TEXTURE_2D);
+
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.rttFramebuffer.width, this.rttFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    this.renderbuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.rttFramebuffer.width, this.rttFramebuffer.height);
+	
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.rttTexture, 0);
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.renderbuffer);
+
+	gl.bindTexture(gl.TEXTURE_2D, null);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+
+SaitoFrameBuffer.prototype.bind = function() {
+	gl.bindFramebuffer(gl.FRAMEBUFFER, this.rttFramebuffer);
+}
+
+SaitoFrameBuffer.prototype.unbind = function() {
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+
+SaitoFrameBuffer.prototype.bindColour = function() {
+	gl.bindTexture(gl.TEXTURE_2D, this.rttTexture);
+}
+
+
+SaitoFrameBuffer.prototype.unbindColour = function() {
+	gl.bindTexture(gl.TEXTURE_2D, null);
+}	
+
+
+
 
 /**
  * A simple Colour class
