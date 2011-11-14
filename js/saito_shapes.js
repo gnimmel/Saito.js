@@ -584,8 +584,6 @@ function createWorldCurveCube(startlat, startlon, endlat, endlon, bend, segments
  * create Plane with a size aligned on the X Axis, size being a 2 size array
  */
 
-
-
 function createPlane(size,colour) {
 
 	var plane = new Primitive;
@@ -626,7 +624,7 @@ function createPlane(size,colour) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, plane.vertexTextureCoordBuffer);
     	var textureCoords = [
       		0.0, 0.0,
-     	 	1.0, 0.0,
+     	    1.0, 0.0,
       		1.0, 1.0,
       		0.0, 1.0,
         ];
@@ -667,3 +665,8 @@ function createPlane(size,colour) {
 	return plane;
 
 }
+
+
+
+
+

@@ -1,0 +1,31 @@
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec2 aTextureCoord;
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat4 uNormalMatrix;
+
+varying vec2 vTextureCoord;
+varying vec4 vTransformedNormal;
+varying vec4 vPosition;
+
+uniform float uNearPlane;
+uniform float uFarPlane;
+
+varying vec3 vNormal;
+varying float vDepth; // in eye space
+
+void main( void )
+{
+	vec4 viewPos = uModelViewMatrix *  vec4(aVertexPosition, 1.0);
+	vDepth = -viewPos.z/uFarPlane;
+
+  // normal in eye space
+  	vNormal      = normalize(( uModelViewMatrix * vec4( aVertexNormal, 0.0 ) ).xyz);
+
+	vPosition = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+    gl_Position =  vPosition;
+    vTextureCoord = aTextureCoord;
+    vTransformedNormal = uModelViewMatrix * vec4(aVertexNormal, 1.0);
+}

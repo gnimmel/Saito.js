@@ -68,6 +68,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/saito.js"></script>
 <script type="text/javascript" src="js/saito_shapes.js"></script>
+<script type="text/javascript" src="js/saito_instagram.js"></script>
 <script type="text/javascript" src="js/jquery-text-effects.js"></script>
 
 <!-- Main Java Script GL Functions 
@@ -92,19 +93,23 @@ var textureCube;
 var cubesx = 65;
 var cubesy = 42;
 var cubesize = 0.2;
-var spacing = 1.0;
+var spacing = 1.2;
 var basicShader;
 var lightShader;
+var ssaoShader;
+var depthShader;
 var planeShader;
 var cuboid;
-var fbo;
+var fboDepth;
+var fboPlain;
+var fboSize;
 var plane;
 
 
 // Must be a better way of this
 
 function Cube() {
-	Cube.prototype.cube = cuboid; // Static really! :P Might add to saito prototype or something
+	Cube.prototype.cube = new InstaCube( new Size2(cubesize,cubesize) ); // Static really! :P Might add to saito prototype or something
 	Cube.prototype.x = 0.0;
 	Cube.prototype.y = 0.0;
 	Cube.prototype.face = 0;
@@ -127,7 +132,13 @@ Cube.prototype.setup = function(x,y) {
 Cube.prototype.draw = function() {
 	mvPushMatrix();
 	mvTranslate([this.x, this.y, 0.0]);
+	mvPushMatrix();
+	mvRotate(this.currentRotX , [0.0,1.0,0.0]);
+//	mvPushMatrix();
+//	mvRotate(Cube.currentRotY , [1.0,0.0,0.0]);
 	this.cube.draw();
+//	mvPopMatrix();
+	mvPopMatrix();
 	mvPopMatrix();
 };
 
@@ -136,21 +147,21 @@ Cube.prototype.spin = function(face) {
 };
 
 Cube.prototype._spinVertical = function (dg) {
-	Cube.targetRotX += dg;
+	this.targetRotX += dg;
 };
 
 Cube.prototype._spinHorizontal = function(dg) {
-	Cube.targetRotY += dg;
+	this.targetRotY += dg;
 };
 
 Cube.prototype.update  = function() {
-	if (Cube.targetRotX != Cube.currentRotX){
-		var dx = Cube.targetRotX - Cube.currentRotX;
-		Cube.currentRotX += dx / 10.0;	// Alter this depending on time later
+	if (this.targetRotX != this.currentRotX){
+		var dx = this.targetRotX - this.currentRotX;
+		this.currentRotX += dx / 10.0;	// Alter this depending on time later
 	}
-	if (Cube.targetRotY != Cube.currentRotY){
-		var dy = Cube.targetRotY - Cube.currentRotY;
-		Cube.currentRotY += dy / 10.0;	// Alter this depending on time later	
+	if (this.targetRotY != this.currentRotY){
+		var dy = this.targetRotY - this.currentRotY;
+		this.currentRotY += dy / 10.0;	// Alter this depending on time later	
 	}
 };
 
@@ -162,22 +173,32 @@ $S.setup = function () {
 	$("#loader").show();
    	$("#loader").center();
 
+   	fboSize = new Size2(1024,1024);
+
     cuboid = createCuboid(cubesize,cubesize,cubesize,new Colour(1.0,1.0,1.0,1.0));
     basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
     planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
     lightShader = new SaitoShader("shaders/per-fragment-lighting-vs.txt", "shaders/per-fragment-lighting-fs.txt");		
-
+    ssaoShader 	= new SaitoShader("shaders/ssao-vs.txt", "shaders/ssao-fs.txt");
+    depthShader	= new SaitoShader("shaders/depth-vs.txt", "shaders/depth-fs.txt")
+    
     textureCube = new SaitoTexture("textures/radial.png");
 
     for (var i=0; i < cubesx; i++){
 		for (var j=0; j < cubesy; j++){
 			var cube = new Cube();
 			cube.setup(i,j);
+			// Add 6 temporary textures to our cybe
+			for (var k=0; k < 6; k++) {
+				cube.cube.setTexture(textureCube,k);
+			}
+
 			cubes.push(cube);
 		}	
 	}
 
-	fbo = new SaitoFrameBuffer(1024,768);
+	fboDepth = new SaitoFrameBuffer(fboSize);
+	fboColour = new SaitoFrameBuffer(fboSize);
 	plane = new createPlane(new Size2(12,12),new Colour(1.0,1.0,1.0,1.0));
 }	
 
@@ -196,6 +217,11 @@ $S.prototype.keyboardPressed = function(event) {
  */
 
 $S.update = function () {
+
+	for (c in cubes){
+		cubes[c]._spinVertical(5.5); 
+	}
+
 	if ($S.resources == 0){
 		$("#loader").hide();
 	}
@@ -207,24 +233,52 @@ $S.update = function () {
 
 
 /**
- * Saito Drawing
+ * Render The Depth FBO
  */
 
-$S.draw = function () {
-
-	gl.clearColor(0.05, 0.05, 0.15, 1.0);
+ var renderDepth = function() {
+ 	
+	fboDepth.bind();
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.clearDepth(1.0);
 
-	// Now bind the fbo - 1024x768
-
-	fbo.bind();
-	gl.clearColor(0.05, 0.05, 0.05, 1.0);
-	gl.clearDepth(1.0);
-
-	gl.viewport(0, 0, 1024, 768);
+	gl.viewport(0, 0, 1024, 1024);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	perspective(50, 1024 / 768, 0.1, 100.0);
+	perspective(50, 1.0, 1.0, 100.0);
+	loadIdentity();  
+	
+	mvPushMatrix();
+	gl.enable(gl.DEPTH_TEST);
+	mvTranslate([ -(cubesx * cubesize * spacing) / 2.0 , -(cubesy * cubesize * spacing) / 2.0 ,-15.0]);
+
+	depthShader.setActive();
+	depthShader.setUniform1f("uNearPlane",1.0);
+	depthShader.setUniform1f("uFarPlane",100.0);
+
+	for (c in cubes) {	
+		cubes[c].draw();
+	}
+
+	depthShader.setInactive();
+	mvPopMatrix();
+
+	fboDepth.unbind();
+ }
+
+/**
+ * Render The colour FBO
+ */
+
+var renderColour = function() {
+	fboColour.bind();
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, 1024, 1024);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, 1.0, 1.0, 100.0);
 	loadIdentity();  
 
 	var lightPos = $V([0.0, 0.0, 3.0 ]);
@@ -232,20 +286,9 @@ $S.draw = function () {
 	
 	mvPushMatrix();
 	gl.enable(gl.DEPTH_TEST);
-	mvTranslate([ -(cubesx * cubesize * spacing) / 2.0 , -(cubesy * cubesize * spacing) / 2.0 ,-8.0]);
-	lightShader.setActive();
+	mvTranslate([ -(cubesx * cubesize * spacing) / 2.0 , -(cubesy * cubesize * spacing) / 2.0 ,-15.0]);
 
-	lightShader.setUniform3f("uMaterialAmbientColor", 0.4,0.4,0.5 );
-	lightShader.setUniform3f("uMaterialDiffuseColor", 1.0,1.0,1.0 );
-	lightShader.setUniform3f("uMaterialSpecularColor", 1.0,1.0,1.0 );
-	lightShader.setUniform3f("uMaterialEmissiveColor", 0.0,0.0,0.1 );
-	lightShader.setUniform1f("uMaterialShininess", 4.0);
-
-	lightShader.setUniform3f("uAmbientLightingColor", 0.1,0.1,0.1 );
-	lightShader.setUniform3f("uPointLightingLocation", lightPos.e(1), lightPos.e(2), lightPos.e(3));
-	lightShader.setUniform3f("uPointLightingDiffuseColor", 1.0,1.0,1.0 );
-	lightShader.setUniform3f("uPointLightingSpecularColor", 0.0,1.0,1.0 );
-	lightShader.setUniform1i("uSampler", 0);
+	basicShader.setActive();
 
     textureCube.bind();
 
@@ -253,32 +296,70 @@ $S.draw = function () {
 		cubes[c].draw();
 	}
 
-	lightShader.setInactive();
+	basicShader.setInactive();
 	mvPopMatrix();
 
-	fbo.unbind();
+	fboColour.unbind(); 
+}
 
 
+/**
+ * Saito Drawing
+ */
+
+$S.draw = function () {
+
+	renderDepth();
+	renderColour();
+
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clearDepth(1.0);
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 1.0, 100.0);
 
 	loadIdentity(); 
 
-	
 	// Draw our Quad
 
 	mvPushMatrix();
 	gl.disable(gl.DEPTH_TEST);
 	mvTranslate([0.0,0.0,-8.0]);
 	
-	planeShader.setActive();
-	fbo.bindColour();
-	plane.draw();
-	fbo.unbindColour();
-	planeShader.setInactive();
-	mvPopMatrix();  
+	ssaoShader.setActive();
 
+	gl.activeTexture(0);
+	fboColour.bindColour();
+	gl.activeTexture(1);
+	fboDepth.bindColour();
+
+	ssaoShader.setUniform1i("RenderedTexture", 0);
+	ssaoShader.setUniform1i("DepthTexture", 1);
+
+	ssaoShader.setUniform1f("TextureWidth",fboSize.w);
+	ssaoShader.setUniform1f("TextureHeight",fboSize.h);
+
+	ssaoShader.setUniform1f("near",1.0);
+	ssaoShader.setUniform1f("far",100.0);
+
+	ssaoShader.setUniform1f("aoCap",0.1);
+	ssaoShader.setUniform1f("aoMultiplier",0.5);
+	ssaoShader.setUniform1f("depthTolerance",0.5);
+	ssaoShader.setUniform1f("aorange",10.5);
+
+	ssaoShader.setUniform1f("brightness",1.0);
+	ssaoShader.setUniform1f("saturation",1.0);
+	ssaoShader.setUniform1f("contrast",1.0);
+
+	plane.draw();
+
+	gl.activeTexture(0);
+	fboColour.unbindColour();
+	gl.activeTexture(1);
+	fboDepth.unbindColour();
+
+	ssaoShader.setInactive();
+	mvPopMatrix();  
 
 }    
  
@@ -306,9 +387,9 @@ $S.draw = function () {
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
 </div>
 
-
+<!--
 <a href="http://github.com/OniDaito"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/4c7dc970b89fd04b81c8e221ba88ff99a06c6b61/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub"></a>
-
+-->
 <script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
 <script type="text/javascript">
 

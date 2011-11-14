@@ -1,0 +1,14 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 vTextureCoord;
+varying vec4 vTransformedNormal;
+varying vec4 vPosition;
+
+varying vec3 vNormal;
+varying float vDepth;
+
+void main( void ) {
+   gl_FragColor = vec4(normalize(vNormal),vDepth);
+}

@@ -1,0 +1,114 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 vTextureCoord;
+varying vec4 vTransformedNormal;
+varying vec4 vPosition;
+varying vec3 vPos;
+
+
+uniform sampler2D RenderedTexture;
+uniform sampler2D DepthTexture;
+
+uniform float TextureWidth;
+uniform float TextureHeight;
+uniform float near;
+uniform float far;
+
+uniform float aoCap;
+uniform float aoMultiplier;
+uniform float depthTolerance;
+uniform float aorange;
+
+#define PI 3.14159265
+#define RINGS 3
+
+float width = TextureWidth;
+float height = TextureHeight;
+
+const int samples = 4;
+const int rings = 3;
+
+uniform float brightness;
+uniform float saturation;
+uniform float contrast;
+
+vec2 rand(in vec2 coord)  {
+	float noiseX = (fract(sin(dot(coord ,vec2(12.9898,78.233))) * 43758.5453));
+	float noiseY = (fract(sin(dot(coord ,vec2(12.9898,78.233)*2.0)) * 43758.5453));
+	return vec2(noiseX,noiseY)*0.004;
+}
+
+float readDepth(in vec2 coord)  {
+	return (2.0 * near) / (far + near - texture2D(DepthTexture, coord ).a * (far-near)); 
+}
+
+float compareDepths( in float depth1, in float depth2 ) {
+	float diff = sqrt(clamp(1.0-(depth1-depth2) / (aorange/(far-near)),0.0,1.0));
+	float ao = min(aoCap,max(0.0,depth1-depth2-depthTolerance) * aoMultiplier) * diff;
+	return ao;
+}
+
+vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con) {
+	// Increase or decrease theese values to adjust r, g and b color channels seperately
+	const float AvgLumR = 0.5;
+	const float AvgLumG = 0.5;
+	const float AvgLumB = 0.5;
+	
+	const vec3 LumCoeff = vec3(0.2125, 0.7154, 0.0721);
+	
+	vec3 AvgLumin = vec3(AvgLumR, AvgLumG, AvgLumB);
+	vec3 brtColor = color * brt;
+	vec3 intensity = vec3(dot(brtColor, LumCoeff));
+	vec3 satColor = mix(intensity, brtColor, sat);
+	vec3 conColor = mix(AvgLumin, satColor, con);
+	return conColor;
+}
+
+
+void main(void){
+	float depth = readDepth(vTextureCoord);
+	float d;
+
+	float aspect = width/height;
+	vec2 noise = rand(vTextureCoord);
+
+	float w = (1.0 / width)/clamp(depth,0.05,1.0)+(noise.x*(1.0-noise.x));
+	float h = (1.0 / height)/clamp(depth,0.05,1.0)+(noise.y*(1.0-noise.y));
+
+	float pw;
+	float ph;
+
+	float ao;	
+	float s;
+
+	for (int i = -rings ; i < rings; i += 1) {
+		for (int j = -samples ; j < samples; j += 1) {
+			float step = PI*2.0 / float(samples*i);
+			pw = (cos(float(j)*step)*float(i));
+			ph = (sin(float(j)*step)*float(i))*aspect;
+			d = readDepth( vec2(vTextureCoord.s+pw*w,vTextureCoord.t+ph*h));
+			ao += compareDepths(depth,d);	
+			s += 1.0;
+		}
+	}
+
+	ao /= s;
+	ao = 1.0 - ao;	
+	
+	// Luminance texture commented out for now.
+	vec3 color = texture2D(RenderedTexture,vTextureCoord).rgb;
+	//vec3 luminance = texture2D(LuminanceTexture,vTextureCoord).rgb;
+	vec3 white = vec3(1.0,1.0,1.0);
+	vec3 black = vec3(0.0,0.0,0.0);
+	vec3 treshold = vec3(0.2,0.2,0.2);
+	
+	
+	// TODO - The Luminance Texture is a really good idea and we should put it back in
+	//luminance = clamp(max(black,luminance-treshold)+max(black,luminance-treshold)+max(black,luminance-treshold),0.0,1.0);
+	//gl_FragColor = vec4(color*mix(vec3(ao,ao,ao),white,luminance),1.0);
+	
+	gl_FragColor = vec4 ( ContrastSaturationBrightness( color * vec3(ao,ao,ao),brightness,saturation,contrast ),1.0);
+
+}

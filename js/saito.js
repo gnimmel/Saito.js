@@ -32,7 +32,9 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo fix the model loading
  * \todo handle the matrix funtions for setting up defaults
  * \todo lighting class that actually works with real gl lighting (and in the shader too) - if possible
- * \todo FBO!!!
+ * \todo FBO - It appears they are power of two square, which is a bit sucky - maybe use EXT?
+ * \todo replace matrix ops with new names and use sylvester vectors as the parameters
+ * \todo setinterval should really just be called as often as possible - infinite loop function pretty much
  */
 
 /**
@@ -56,13 +58,6 @@ var Saito = new Object();
 // Possibly don't need to prototype but I'll leave it for now
 
 Saito.prototype = {
-
-	_setup : function() {
-		Saito.setup();    
-        	setInterval(Saito.prototype._tick, 15);
-		Saito.totalTime = 0.0;
-
-	},
     	
 	_tick : function() {
 	    
@@ -74,9 +69,24 @@ Saito.prototype = {
 		Saito.totalTime += Saito.elapsed;
 	
 		Saito.prototype._update();
-		Saito.prototype._draw();  
+		Saito.prototype._draw();
+		
 	},
 	
+	_nextFrame : function () {
+		while (true){
+			Saito.prototype._tick();
+		}
+	},
+
+	_setup : function() {
+		Saito.setup();    
+        //	setInterval(Saito.prototype._tick, 1);
+		Saito.totalTime = 0.0;
+
+		Saito.prototype._nextFrame();
+	},
+
 	_update : function () {
 		Saito.update();
 	    
@@ -437,12 +447,12 @@ SaitoTextureCube = function (path, extension) {
                     		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
                     		gl.bindTexture(gl.TEXTURE_CUBE_MAP,obj.texture);
                     	
-                             	// Could really do with some mipmapping I think
+                            // Could really do with some mipmapping I think
                  
                     		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                     		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-				gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-				gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+							gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+							gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
      
                     		for (var j= 0; j < 6; ++j){
                         		gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, obj.texImages[j]);
@@ -699,9 +709,9 @@ function Primitive() {
  * \todo - deal with resizing
  */
 
-SaitoFrameBuffer = function(w,h) {
-	this.width = w;
-	this.height = h;
+SaitoFrameBuffer = function(size) {
+	this.width = size.w;
+	this.height = size.h;
 
 	
 	this.rttFramebuffer = gl.createFramebuffer();
@@ -729,6 +739,9 @@ SaitoFrameBuffer = function(w,h) {
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	if(gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)
+		alert("Failed to Create Framebuffer!");
 }
 
 
@@ -749,8 +762,6 @@ SaitoFrameBuffer.prototype.bindColour = function() {
 SaitoFrameBuffer.prototype.unbindColour = function() {
 	gl.bindTexture(gl.TEXTURE_2D, null);
 }	
-
-
 
 
 /**
@@ -785,6 +796,9 @@ Size2 = function(w,h) {
 	this.h = h;
 	this.v = $V([w,h]);
 }
+
+Size2.prototype.x = this.w;
+Size2.prototype.y = this.h;
 
 
 
