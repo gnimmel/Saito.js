@@ -70,6 +70,9 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/saito_shapes.js"></script>
 <script type="text/javascript" src="js/saito_instagram.js"></script>
 <script type="text/javascript" src="js/jquery-text-effects.js"></script>
+<script type="text/javascript" src="js/stats.js/src/Stats.js"></script>
+
+
 
 <!-- Main Java Script GL Functions 
 
@@ -80,7 +83,6 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 // Globals you want to mess with
 
-
 jQuery.fn.center = function () {
     this.css("position","absolute");
     this.css("top", (($(window).height() - this.outerHeight()) / 2) + $(window).scrollTop() + "px");
@@ -90,8 +92,8 @@ jQuery.fn.center = function () {
 
 var cubes = new Array();
 var textureCube;
-var cubesx = 65;
-var cubesy = 42;
+var cubesx = 5;
+var cubesy = 2;
 var cubesize = 0.2;
 var spacing = 1.2;
 var basicShader;
@@ -200,6 +202,7 @@ $S.setup = function () {
 	fboDepth = new SaitoFrameBuffer(fboSize);
 	fboColour = new SaitoFrameBuffer(fboSize);
 	plane = new createPlane(new Size2(12,12),new Colour(1.0,1.0,1.0,1.0));
+
 }	
 
 
@@ -229,6 +232,7 @@ $S.update = function () {
 	for (c in cubes) {	
 		cubes[c].update();
 	}
+	console.log("update");
 } 
 
 
@@ -405,6 +409,21 @@ $S.draw = function () {
 
 </script>
 
+<script type="text/javascript">
+// Load the Stats from Mr Doobs Stats JS
+var stats = new Stats();
+
+// Align top-left
+stats.domElement.style.position = 'absolute';
+stats.domElement.style.left = '0px';
+stats.domElement.style.top = '0px';
+
+document.body.appendChild( stats.domElement );
+
+setInterval( function () {
+    stats.update();
+}, 1000 / 60 );
+</script>
 
 </body>
 

@@ -37,16 +37,19 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo setinterval should really just be called as often as possible - infinite loop function pretty much
  */
 
+ /** 
+  * Resources:
+  *		http://nokarma.org/2011/02/02/javascript-game-development-the-game-loop/index.html
+  */
+
 /**
  * Globals
  */
 var gl;
 
-var DEBUG = false;
 var USEJQUERYUI = true;
-var FULLSCREEN = true;
 
-// Debug mode does seem to have some side-effects!
+// Saito.prototype.debug mode does seem to have some side-effects!
 
 /**
  * Master Saito Object
@@ -58,33 +61,11 @@ var Saito = new Object();
 // Possibly don't need to prototype but I'll leave it for now
 
 Saito.prototype = {
-    	
-	_tick : function() {
-	    
-		var timeNow = new Date().getTime();
-        	if (Saito.lastTime  != 0) {
-			Saito.elapsed = timeNow - Saito.lastTime;
-        	}
-        	Saito.lastTime  = timeNow;
-		Saito.totalTime += Saito.elapsed;
-	
-		Saito.prototype._update();
-		Saito.prototype._draw();
-		
-	},
-	
-	_nextFrame : function () {
-		while (true){
-			Saito.prototype._tick();
-		}
-	},
 
 	_setup : function() {
 		Saito.setup();    
-        //	setInterval(Saito.prototype._tick, 1);
 		Saito.totalTime = 0.0;
-
-		Saito.prototype._nextFrame();
+		window.onEachFrame(Saito.prototype._run);
 	},
 
 	_update : function () {
@@ -103,7 +84,7 @@ Saito.prototype = {
 
 	_resize: function(width,height) {
 		if (Saito.resize != undefined) { Saito.resize(width,height); }
-		if (FULLSCREEN) {
+		if (Saito.prototype.fullscreen) {
 			Saito.canvas.width = width;
 			Saito.canvas.height = height;
 		}
@@ -117,7 +98,120 @@ Saito.prototype = {
 
 	getHeight : function () {
 		return Saito.canvas.height;
+	},
+	
+	_run : function() {
+     
+     	while ( (new Date).getTime() > Saito.prototype.nextGameTick) {
+        	Saito.prototype._update();
+        	Saito.prototype.nextGameTick += Saito.prototype.skipTicks;
+        	Saito.prototype.loops++;
+        
+      	}
+
+    	Saito.prototype._draw();
 	}
+	
+};
+
+Saito.prototype.fps  = 30;
+Saito.prototype.fullscreen = true;
+Saito.prototype.debug = false;
+Saito.prototype.loops = 0;
+Saito.prototype.skipTicks = 1000 / Saito.prototype.fps;
+Saito.prototype.maxFrameSkip = 10;
+Saito.prototype.nextGameTick = (new Date).getTime(); 
+
+/**
+ * Taken from http://nokarma.org/2011/02/02/javascript-game-development-the-game-loop/index.html
+ * A better way of doing a game loop
+ */
+
+(function() {
+	var onEachFrame;
+	if (window.webkitRequestAnimationFrame) {
+		onEachFrame = function(cb) {
+	  		var _cb = function() { cb(); webkitRequestAnimationFrame(_cb); }
+	  		_cb();
+		};
+	} else if (window.mozRequestAnimationFrame) {
+		onEachFrame = function(cb) {
+	  		var _cb = function() { cb(); mozRequestAnimationFrame(_cb); }
+	  		_cb();
+		};
+	} else {
+		onEachFrame = function(cb) {
+	  	setInterval(cb, 1000 / 60);
+		}
+	}
+
+	window.onEachFrame = onEachFrame;
+})();
+
+		
+/**
+ * Saito Clock - borrowed from Three.js
+ */
+
+ Saito.Clock = function ( autoStart ) {
+
+	this.autoStart = ( autoStart !== undefined ) ? autoStart : true;
+
+	this.startTime = 0;
+	this.oldTime = 0;
+	this.elapsedTime = 0;
+
+	this.running = false;
+
+};
+
+Saito.Clock.prototype.start = function () {
+
+	this.startTime = Date.now();
+	this.oldTime = this.startTime;
+
+	this.running = true;
+
+};
+
+Saito.Clock.prototype.stop = function () {
+
+	this.getElapsedTime();
+
+	this.running = false;
+
+};
+
+Saito.Clock.prototype.getElapsedTime = function () {
+
+	this.elapsedTime += this.getDelta();
+
+	return this.elapsedTime;
+
+};
+
+Saito.Clock.prototype.getDelta = function () {
+
+	var diff = 0;
+
+	if ( this.autoStart && ! this.running ) {
+
+		this.start();
+
+	}
+
+	if ( this.running ) {
+
+		var newTime = Date.now();
+		diff = 0.001 * ( newTime - this.oldTime );
+		this.oldTime = newTime;
+
+		this.elapsedTime += diff;
+
+	}
+
+	return diff;
+
 };
 
 /**
@@ -139,7 +233,7 @@ function throwOnGLError(err, funcName, args) {
 Saito.initialize = function(){
 	this.canvas = $("#webgl-canvas")[0];	    
 	try {
-        	if (DEBUG) gl = WebGLDebugUtils.makeDebugContext(this.canvas.getContext("experimental-webgl"));
+        	if (Saito.debug) gl = WebGLDebugUtils.makeDebugContext(this.canvas.getContext("experimental-webgl"));
         	else gl = this.canvas.getContext("experimental-webgl");
         
         	gl.viewportWidth = Saito.width = this.canvas.width;
@@ -164,8 +258,8 @@ Saito.initialize = function(){
     	}
     	
 	if (!gl) {
-        	alert("Could not initialise WebGL, sorry :-(");
-    	}else if (FULLSCREEN){
+        alert("Could not initialise WebGL, sorry :-(");
+    }else if (Saito.prototype.fullscreen){
 		Saito.prototype._resize($(window).width(), $(window).height());
 	}
 
@@ -203,7 +297,7 @@ SaitoShader = function(vertpath,fragpath) {
 			Saito.resources--;
 
 			if (vertdata){
-				if (DEBUG) alert("Loaded " + vertpath + "\n\n");
+				if (Saito.debug) alert("Loaded " + vertpath + "\n\n");
 				Saito.resources++;
 				
 				
@@ -219,7 +313,7 @@ SaitoShader = function(vertpath,fragpath) {
 					success: function(fragdata){
 						Saito.resources--;
 						if (fragdata){
-							if (DEBUG) alert("Loaded " + fragpath + "\n\n");
+							if (Saito.debug) alert("Loaded " + fragpath + "\n\n");
 							
 							// Compile up
 							object.vertexShader = gl.createShader(gl.VERTEX_SHADER);
