@@ -88,9 +88,25 @@ jQuery.fn.center = function () {
     return this;
 }
 
-var basicShader;
+var planeShader;
 var metaballShader;
 var plane;
+var fboMetaBalls;
+var fboSize;
+
+var m0x =  -0.4 + Math.random() * 0.8;
+var m0y =  -0.8 + Math.random() * 1.6;
+var m1x =  -0.4 + Math.random() * 0.0;
+var m1y =  -0.8 + Math.random() * 1.6;
+var m2x =  -0.4 + Math.random() * 0.8;
+var m2y =  -0.8 + Math.random() * 1.6;
+var m3x =  -0.4 + Math.random() * 0.8;
+var m3y =  -0.8 + Math.random() * 1.6;
+
+var m0s = Math.random() * 0.1 + 0.01;
+var m1s = Math.random() * 0.1 + 0.01;
+var m2s = Math.random() * 0.1 + 0.01;
+var m3s = Math.random() * 0.1 + 0.01;
 
 /**
  * Saito Load resources
@@ -102,10 +118,27 @@ $S.setup = function () {
 
    	fboSize = new Size2(1024,1024);
 
-    basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
+    planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
     metaballShader = new SaitoShader("shaders/metaballs-vs.txt", "shaders/metaballs-fs.txt");
      
+   	fboMetaBalls = new SaitoFrameBuffer(fboSize);
+
+
 	plane = new createPlane(new Size2(2.0,2.0),new Colour(1.0,1.0,1.0,1.0));
+	planeMirror = new createPlane(new Size2(2.0,2.0),new Colour(1.0,1.0,1.0,1.0));
+
+	/// Change the Mirrors Texture Co-ords
+	gl.bindBuffer(gl.ARRAY_BUFFER, planeMirror.vertexTextureCoordBuffer);
+    	var textureCoords = [
+      		1.0, 0.0,
+     	    0.0, 0.0,
+      		0.0, 1.0,
+      		1.0, 1.0,
+        ];
+
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+	planeMirror.vertexTextureCoordBuffer.itemSize = 2;
+	planeMirror.vertexTextureCoordBuffer.numItems = 4;
 
 }	
 
@@ -136,7 +169,45 @@ $S.update = function () {
 
 $S.draw = function () {
 
-	gl.clearColor(0.2, 0.2, 0.2, 1.0);
+	/// Render the Metaballs to an FBO
+	fboMetaBalls.bind();
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, 1024, 1024);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, 1.0, 1.0, 100.0);
+	loadIdentity();  
+	
+	mvPushMatrix();
+	mvTranslate([0.0,0.0,-2.0]);
+	
+	metaballShader.setActive();
+
+	metaballShader.setUniform2f("metaball0", m0x, m0y);
+	metaballShader.setUniform2f("metaball1", m1x, m1y);
+	metaballShader.setUniform2f("metaball2", m2x, m2y);
+	metaballShader.setUniform2f("metaball3", m3x, m3y);
+
+	metaballShader.setUniform1f("metaballS0", m0s);
+	metaballShader.setUniform1f("metaballS1", m1s);
+	metaballShader.setUniform1f("metaballS2", m2s);
+	metaballShader.setUniform1f("metaballS3", m3s);
+
+ 	metaballShader.setUniform2f("resolution", gl.viewportWidth / 2.0,gl.viewportHeight);
+	metaballShader.setUniform4f("mouse",($S.mouseX + 1.0) / 2.0 * gl.viewportWidth, gl.viewportHeight - (($S.mouseY + 1.0) / 2.0 * gl.viewportHeight), 0.0, 0.0);
+
+	plane.draw();
+
+	metaballShader.setInactive();
+	mvPopMatrix();
+
+	fboMetaBalls.unbind(); 
+
+	// Now Splat the FBOs to the Screen, with adjust tex coordinates
+
+	gl.clearColor(1,0, 1.0, 1.0, 1.0);
 	gl.clearDepth(1.0);
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -150,14 +221,22 @@ $S.draw = function () {
 	gl.disable(gl.DEPTH_TEST);
 	mvTranslate([0.0,0.0,-2.0]);
 
-	metaballShader.setActive();
+	planeShader.setActive();
+	planeShader.setUniform1i("uSampler",0);
 
-	metaballShader.setUniform2f("resolution", gl.viewportWidth,gl.viewportHeight);
-	metaballShader.setUniform4f("mouse",($S.mouseX + 1.0) / 2.0 * gl.viewportWidth, gl.viewportHeight - (($S.mouseY + 1.0) / 2.0 * gl.viewportHeight), 0.0, 0.0);
-
+	gl.activeTexture(0);
+	fboMetaBalls.bindColour();
+	mvPushMatrix();
+	mvTranslate([-1.0,0.0,0.0]);
 	plane.draw();
+	mvPopMatrix();
 
-	metaballShader.setInactive();
+	mvPushMatrix();
+	mvTranslate([1.0,0.0,0.0]);
+	planeMirror.draw();
+	mvPopMatrix();
+
+	planeShader.setInactive();
 	mvPopMatrix();  
 
 }    

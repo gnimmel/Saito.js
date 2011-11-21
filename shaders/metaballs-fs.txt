@@ -12,15 +12,31 @@ varying float vColor;
 
 uniform vec2 resolution;
 uniform vec4 mouse;
+
+// Metaballs
+uniform vec2 metaball0;
+uniform vec2 metaball1;
+uniform vec2 metaball2;
+uniform vec2 metaball3;
+
+uniform float metaballS0;
+uniform float metaballS1;
+uniform float metaballS2;
+uniform float metaballS3;
+
 const float aa_th = 1.01; //range for antialiasing
 const float max_th = 0.99; //threshold
 const float smoothMult = 1.0/(aa_th-max_th);
 
+
 float calcMetaBalls(vec2 pos){
     //first metaball with radius 0.3
-    float val =  0.3 / distance(pos, vec2(0.0, 0.0));
 
-    //second metaball with radius 0.1 at mousePos
+    float val =  metaballS0 / distance(pos, metaball0);
+    val +=  metaballS1 / distance(pos, metaball1);
+    val +=  metaballS2 / distance(pos, metaball2);
+    val +=  metaballS3 / distance(pos, metaball3);
+
     val += 0.1 / distance(pos, mouse.xy/resolution.xy*2.0-1.0);
     return val;
 }
@@ -35,7 +51,7 @@ void main(void) {
     //thresholding
 
     if(temp<max_th){
-       val = 0.0;
+       val = 1.0;
     } else {
 
       //this is a hacky approach to antialiase them. it works great
@@ -44,9 +60,9 @@ void main(void) {
       //I propably have to factor in the function of their energy, but how?
 
       if(temp<aa_th){
-       val = smoothstep(1.0, 0.0, (aa_th-temp)*smoothMult);
+       val = smoothstep(0.0, 1.0, (aa_th-temp)*smoothMult);
       } else {
-       val = 1.0;
+       val = 0.0;
       }
     }
     gl_FragColor = vec4(val,val,val,1.0);
