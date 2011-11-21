@@ -1,0 +1,53 @@
+// http://www.gamedev.net/topic/560501-glsl-2d-metaballs--antialiasing/
+
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 vTextureCoord;
+varying vec4 vTransformedNormal;
+
+varying vec3 vNormal;
+varying float vColor;
+
+uniform vec2 resolution;
+uniform vec4 mouse;
+const float aa_th = 1.01; //range for antialiasing
+const float max_th = 0.99; //threshold
+const float smoothMult = 1.0/(aa_th-max_th);
+
+float calcMetaBalls(vec2 pos){
+    //first metaball with radius 0.3
+    float val =  0.3 / distance(pos, vec2(0.0, 0.0));
+
+    //second metaball with radius 0.1 at mousePos
+    val += 0.1 / distance(pos, mouse.xy/resolution.xy*2.0-1.0);
+    return val;
+}
+
+
+
+void main(void) {
+    vec2 screenPos = ((gl_FragCoord.xy / resolution.xy)*2.0-1.0);
+    float val = 0.0;
+    float temp = calcMetaBalls(screenPos);
+
+    //thresholding
+
+    if(temp<max_th){
+       val = 0.0;
+    } else {
+
+      //this is a hacky approach to antialiase them. it works great
+      //on the mainpart of the metaballs but not on the parts connecting them,
+      //where it gets kinda blurry.
+      //I propably have to factor in the function of their energy, but how?
+
+      if(temp<aa_th){
+       val = smoothstep(1.0, 0.0, (aa_th-temp)*smoothMult);
+      } else {
+       val = 1.0;
+      }
+    }
+    gl_FragColor = vec4(val,val,val,1.0);
+}

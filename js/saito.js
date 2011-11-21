@@ -7,7 +7,7 @@
  
 THE GHOST IN THE CSH
  
-SAITO.JS  v.3
+SAITO.JS  v.4
 
 Benjamin Blundell
 
@@ -35,6 +35,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
  * \todo FBO - It appears they are power of two square, which is a bit sucky - maybe use EXT?
  * \todo replace matrix ops with new names and use sylvester vectors as the parameters
  * \todo setinterval should really just be called as often as possible - infinite loop function pretty much
+ * \todo automatically add the shader variables on the fly perhaps? 
  */
 
  /** 
@@ -380,12 +381,35 @@ SaitoShader = function(vertpath,fragpath) {
 
 /**
  * Set a uniform of 3 floats
+ * \todo convert to an array and flatten maybe? Consistency
  */
 
 SaitoShader.prototype.setUniform3f = function( name, v0,v1,v2) {
 	if (this.shaderProgram != undefined){
 		var uniform = gl.getUniformLocation(this.shaderProgram, name);
 			gl.uniform3f(uniform,v0,v1,v2);	
+	}
+}
+
+
+
+SaitoShader.prototype.setUniform4f = function( name, v0,v1,v2,v3) {
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);
+			gl.uniform4f(uniform,v0,v1,v2,v3);	
+	}
+}
+
+
+
+/**
+ * Set a uniform of 2 floats
+ */
+
+SaitoShader.prototype.setUniform2f = function( name, v0,v1) {
+	if (this.shaderProgram != undefined){
+		var uniform = gl.getUniformLocation(this.shaderProgram, name);
+			gl.uniform2f(uniform,v0,v1);	
 	}
 }
 
@@ -411,9 +435,6 @@ SaitoShader.prototype.setUniform1i = function( name, variable) {
 		gl.uniform1i(uniform,variable);
 	}
 }
-
-
-
 
 
 /**
