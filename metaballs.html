@@ -41,7 +41,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <!--[if IE 8 ]>    <html class="ie8" lang="en"> <![endif]-->
 <!--[if (gte IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
 <head>
-<title>DENIED - Saito.js</title>
+<title>Rorschach - Saito.js</title>
 
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -94,25 +94,43 @@ var plane;
 var fboMetaBalls;
 var fboSize;
 
-var m0x =  -0.4 + Math.random() * 0.8;
+var m0x =  0.4 + Math.random() * 0.8;
 var m0y =  -0.8 + Math.random() * 1.6;
-var m1x =  -0.4 + Math.random() * 0.0;
+var m1x =  0.4 + Math.random() * 0.0;
 var m1y =  -0.8 + Math.random() * 1.6;
-var m2x =  -0.4 + Math.random() * 0.8;
+var m2x =  0.4 + Math.random() * 0.8;
 var m2y =  -0.8 + Math.random() * 1.6;
-var m3x =  -0.4 + Math.random() * 0.8;
+var m3x =  0.4 + Math.random() * 0.8;
 var m3y =  -0.8 + Math.random() * 1.6;
+var m4x =  0.4 + Math.random() * 0.8;
+var m4y =  -0.8 + Math.random() * 1.6;
 
 var m0s = Math.random() * 0.1 + 0.01;
 var m1s = Math.random() * 0.1 + 0.01;
 var m2s = Math.random() * 0.1 + 0.01;
 var m3s = Math.random() * 0.1 + 0.01;
+var m4s = Math.random() * 0.1 + 0.01;
+
+function randomString() {
+	var chars = "0123456789abcdefghiklmnopqrstuvwxyz";
+	var string_length = 11;
+	var randomstring = '';
+	for (var i=0; i<string_length; i++) {
+		var rnum = Math.floor(Math.random() * chars.length);
+		randomstring += chars.substring(rnum,rnum+1);
+	}
+	$("#chirp").text(randomstring);
+}
+
 
 /**
  * Saito Load resources
  */
 
 $S.setup = function () {
+
+	randomString();
+
 	$("#loader").show();
    	$("#loader").center();
 
@@ -189,11 +207,13 @@ $S.draw = function () {
 	metaballShader.setUniform2f("metaball1", m1x, m1y);
 	metaballShader.setUniform2f("metaball2", m2x, m2y);
 	metaballShader.setUniform2f("metaball3", m3x, m3y);
+	metaballShader.setUniform2f("metaball4", m4x, m4y);
 
 	metaballShader.setUniform1f("metaballS0", m0s);
 	metaballShader.setUniform1f("metaballS1", m1s);
 	metaballShader.setUniform1f("metaballS2", m2s);
 	metaballShader.setUniform1f("metaballS3", m3s);
+	metaballShader.setUniform1f("metaballS4", m4s);
 
  	metaballShader.setUniform2f("resolution", gl.viewportWidth / 2.0,gl.viewportHeight);
 	metaballShader.setUniform4f("mouse",($S.mouseX + 1.0) / 2.0 * gl.viewportWidth, gl.viewportHeight - (($S.mouseY + 1.0) / 2.0 * gl.viewportHeight), 0.0, 0.0);
@@ -249,6 +269,7 @@ $S.draw = function () {
 <body onload="Saito.initialize()">
     
 <header>
+	<div style="width: 300px; margin-left: auto; margin-right: auto;"><h2 style="text-align: center" id="chirp"></h2></div>
 </header>
 
 
