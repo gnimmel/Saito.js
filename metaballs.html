@@ -192,10 +192,10 @@ $S.draw = function () {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.clearDepth(1.0);
 
-	gl.viewport(0, 0, 1024, 1024);
+	gl.viewport(0, 0, fboSize.w, fboSize.h);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	perspective(50, 1.0, 1.0, 100.0);
+	perspective(50, fboSize.w/fboSize.h, 1.0, 100.0);
 	loadIdentity();  
 	
 	mvPushMatrix();
@@ -215,8 +215,7 @@ $S.draw = function () {
 	metaballShader.setUniform1f("metaballS3", m3s);
 	metaballShader.setUniform1f("metaballS4", m4s);
 
- 	metaballShader.setUniform2f("resolution", gl.viewportWidth / 2.0,gl.viewportHeight);
-	metaballShader.setUniform4f("mouse",($S.mouseX + 1.0) / 2.0 * gl.viewportWidth, gl.viewportHeight - (($S.mouseY + 1.0) / 2.0 * gl.viewportHeight), 0.0, 0.0);
+ 	metaballShader.setUniform2f("resolution", fboSize.w, fboSize.h);
 
 	plane.draw();
 
@@ -227,7 +226,7 @@ $S.draw = function () {
 
 	// Now Splat the FBOs to the Screen, with adjust tex coordinates
 
-	gl.clearColor(1,0, 1.0, 1.0, 1.0);
+	gl.clearColor(1,0, 1.0, 0.0, 1.0);
 	gl.clearDepth(1.0);
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

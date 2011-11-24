@@ -90,7 +90,7 @@ Saito.prototype = {
 			Saito.canvas.height = height;
 		}
 		gl.viewportWidth = Saito.canvas.width;
-        	gl.viewportHeight = Saito.canvas.height;
+        gl.viewportHeight = Saito.canvas.height;
 	},
 
 	getWidth : function () {
@@ -117,7 +117,7 @@ Saito.prototype = {
 
 Saito.prototype.fps  = 30;
 Saito.prototype.fullscreen = true;
-Saito.prototype.debug = false;
+Saito.prototype.debug = true;
 Saito.prototype.loops = 0;
 Saito.prototype.skipTicks = 1000 / Saito.prototype.fps;
 Saito.prototype.maxFrameSkip = 10;
@@ -914,6 +914,8 @@ Size2 = function(w,h) {
 
 Size2.prototype.x = this.w;
 Size2.prototype.y = this.h;
+Size2.prototype.width = this.w;
+Size2.prototype.height = this.h;
 
 
 

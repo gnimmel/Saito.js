@@ -11,7 +11,6 @@ varying vec3 vNormal;
 varying float vColor;
 
 uniform vec2 resolution;
-uniform vec4 mouse;
 
 // Metaballs
 uniform vec2 metaball0;
@@ -40,7 +39,6 @@ float calcMetaBalls(vec2 pos){
     val +=  metaballS3 / distance(pos, metaball3);
     val +=  metaballS4 / distance(pos, metaball4);
 
-   // val += 0.1 / distance(pos, mouse.xy/resolution.xy*2.0-1.0);
     return val;
 }
 
