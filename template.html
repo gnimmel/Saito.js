@@ -1,0 +1,231 @@
+<!--                   __  .__              ________ 
+   ______ ____   _____/  |_|__| ____   ____/   __   \
+  /  ___// __ \_/ ___\   __\  |/  _ \ /    \____    /
+  \___ \\  ___/\  \___|  | |  (  <_> )   |  \ /    / 
+ /____  >\___  >\___  >__| |__|\____/|___|  //____/  .co.uk
+      \/     \/     \/                    \/         
+ 
+THE GHOST IN THE CSH
+ 
+SAITO.JS  v.02
+
+template.html
+
+Benjamin Blundell
+
+oni@section9.co.uk
+
+http://www.section9.co.uk
+
+Based on the excellent work from:
+
+* Learning WebGL - http://learningwebgl.com/
+* JQuery and JQueryUI - http://jquery.com/
+* Sylvester Maths Library - http://sylvester.jcoglan.com/
+
+This software is released under Creative Commons Attribution Non-Commercial Share Alike
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+
+* Some of the textures were found at http://vterrain.org/Imagery/WholeEarth/
+
+ -->
+
+
+<!doctype html>
+
+<!--[if lt IE 7]> 
+ 	<meta http-equiv="refresh" content="5;url=http://www.webstandards.org/action/previous-campaigns/buc/upgrade/" />
+ <![endif]-->
+<!--[if IE 7 ]>    <html class="ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
+<head>
+<title>DENIED - Saito.js</title>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+<meta name="description" content="">
+<meta name="author" content="">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="/favicon.ico">
+
+
+<link type="text/css" href="css/black-tie/jquery-ui-1.8.5.custom.css" rel="stylesheet" />
+<link rel="stylesheet" href="css/960.css" />
+<link rel="stylesheet" href="css/Saito.css" />
+<link rel="stylesheet" href="css/Denied.css" />
+
+
+<!-- JS For Additional OpenGL Functions -->
+
+<script type="text/javascript" src="js/jquery-1.6.2.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.5.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.mousewheel.js"></script>
+<script type="text/javascript" src="js/sylvester.js"></script>
+<script type="text/javascript" src="js/glUtils.js"></script>
+<script type="text/javascript" src="js/webgl-debug.js"></script>
+<script type="text/javascript" src="js/saito.js"></script>
+<script type="text/javascript" src="js/saito_shapes.js"></script>
+
+
+<!-- Main Java Script GL Functions 
+
+- $S is the main Section9 WebGL Class instance that has master control
+
+-->
+<script type="text/javascript">
+
+// Globals you want to mess with
+var planeShader;
+var textureRadial;
+var plane;
+
+jQuery.fn.center = function () {
+    this.css("position","absolute");
+    this.css("top", (($(window).height() - this.outerHeight()) / 2) + $(window).scrollTop() + "px");
+    this.css("left", (($(window).width() - this.outerWidth()) / 2) + $(window).scrollLeft() + "px");
+    return this;
+}
+
+
+/**
+ * Setup controls - JQuery related - Not S9WebGL per-se
+ */
+
+/*Saito.mouseScrollDown = function() {
+	zoom += 0.1;
+	if (zoom > 9.0) zoom = 9.0;
+};
+
+Saito.mouseScrollUp = function() {
+	zoom -= 0.1;
+	if (zoom < 2.0) zoom = 2.0;
+
+};*/
+
+/**
+ * Saito Load resources
+ */
+
+
+
+$S.setup = function () {
+	$("#loader").show();
+   	$("#loader").center();
+
+	plane = createPlane( new Size2(12,12), new Colour(0.1,0.9,1.0,1.0));
+	textureRadial = new SaitoTexture("textures/radial.png");
+       
+	// Ray Shader
+	planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
+}	
+
+
+
+/**
+ * Saito Update GL
+ */
+
+$S.update = function () {
+	if ($S.resources == 0){
+		$("#loader").hide();
+	}
+
+} 
+
+
+/**
+ * Saito Drawing
+ */
+
+$S.draw = function () {
+
+	gl.clearColor(0.05, 0.05, 0.05, 1.0);
+	gl.clearDepth(1.0);
+
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+	perspective(50, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+	loadIdentity();  
+
+	mvTranslate([0.0, 0.0, -5.0]);
+
+	var lightPos = $V([0.0, 0.0, 3.0 ]);
+	lightPos.x(Saito.prototype.modelViewMatrix); 
+	
+	// Back Plane
+	mvPushMatrix();
+	gl.disable(gl.DEPTH_TEST);
+	mvTranslate([0.0,0.0,-5.0]);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+	planeShader.setActive();
+	planeShader.setUniform1i("uSampler", 0);
+	planeShader.setUniform1f("uTime",  $S.totalTime / 1000);
+	textureRadial.bind();
+	plane.draw();
+	textureRadial.unbind();
+	planeShader.setInactive();
+
+	gl.disable(gl.BLEND);
+	gl.enable(gl.DEPTH_TEST);
+
+	mvPopMatrix();
+}    
+ 
+</script>
+
+
+</head>
+
+<body onload="Saito.initialize()">
+    
+<header>
+	<div id="title"><h1>SAITO.js Template</h1><h3>Override the various functions to create your own WebGL Programs</h3></div>  
+</header>
+
+<div id ="lefthand">
+	<p></p>
+</div>
+
+<div id ="loader">
+	<img src="http://saito.section9.co.uk/loader.gif" alt="Loading Textures" />
+	<p>loading textures and shaders</p>
+</div>
+
+
+<footer>
+<p>credits: <a href="http://www.section9.co.uk">section9.co.uk</a> &dash; <a href="http://onehackoranother.com/projects/jquery/jquery-grab-bag/text-effects.html">JQuery Grab Bag</a> &dash; <a href="http://html5boilerplate.com/">HTML5 Boilerplate</a> &dash; <a href="http://jquery.com/">jquery</a> &dash; <a href="http://sylvester.jcoglan.com/">sylvester</a> &dash; <a href="http://www.maxmind.com/app/geolitecity">geolitecity</a></p>
+</footer>
+
+<div id="mainbody" role="main">      
+<canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
+</div>
+
+
+<a href="http://github.com/OniDaito"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/4c7dc970b89fd04b81c8e221ba88ff99a06c6b61/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub"></a>
+
+<script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2107281-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+</body>
+
+</html>

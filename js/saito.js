@@ -876,8 +876,8 @@ SaitoFrameBuffer.prototype.bindColour = function() {
 
 SaitoFrameBuffer.prototype.unbindColour = function() {
 	gl.bindTexture(gl.TEXTURE_2D, null);
-}	
-
+}
+	
 
 /**
  * A simple Colour class
