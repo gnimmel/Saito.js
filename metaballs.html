@@ -71,6 +71,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <script type="text/javascript" src="js/saito_instagram.js"></script>
 <script type="text/javascript" src="js/jquery-text-effects.js"></script>
 <script type="text/javascript" src="js/stats.js/src/Stats.js"></script>
+<script type="text/javascript" src="js/md5.js"></script>
 
 <!-- Main Java Script GL Functions 
 
@@ -94,16 +95,12 @@ var plane;
 var fboMetaBalls;
 var fboSize;
 
-var m0x =  0.4 + Math.random() * 0.8;
-var m0y =  -0.8 + Math.random() * 1.6;
-var m1x =  0.4 + Math.random() * 0.0;
-var m1y =  -0.8 + Math.random() * 1.6;
-var m2x =  0.4 + Math.random() * 0.8;
-var m2y =  -0.8 + Math.random() * 1.6;
-var m3x =  0.4 + Math.random() * 0.8;
-var m3y =  -0.8 + Math.random() * 1.6;
-var m4x =  0.4 + Math.random() * 0.8;
-var m4y =  -0.8 + Math.random() * 1.6;
+
+var m0p = $V([0.4 + Math.random() * 0.8,  -0.8 + Math.random() * 1.6, 0.0]);
+var m1p = $V([0.4 + Math.random() * 0.8,  -0.8 + Math.random() * 1.6, 0.0]);
+var m2p = $V([0.4 + Math.random() * 0.8,  -0.8 + Math.random() * 1.6, 0.0]);
+var m3p = $V([0.4 + Math.random() * 0.8,  -0.8 + Math.random() * 1.6, 0.0]);
+var m4p = $V([0.4 + Math.random() * 0.8,  -0.8 + Math.random() * 1.6, 0.0]);
 
 var m0s = Math.random() * 0.1 + 0.01;
 var m1s = Math.random() * 0.1 + 0.01;
@@ -113,13 +110,120 @@ var m4s = Math.random() * 0.1 + 0.01;
 
 function randomString() {
 	var chars = "0123456789abcdefghiklmnopqrstuvwxyz";
-	var string_length = 11;
+	var string_length = 10;
 	var randomstring = '';
 	for (var i=0; i<string_length; i++) {
 		var rnum = Math.floor(Math.random() * chars.length);
 		randomstring += chars.substring(rnum,rnum+1);
 	}
-	$("#chirp").text(randomstring);
+	$("#chirp").val(randomstring);
+	return randomstring;
+}
+
+/**
+ * URL Variables (the chirp basically)
+ */
+
+function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+/**
+ * String to Bytes
+ */
+
+ function stringToBytes ( str ) {
+	var ch, st, re = [];
+  	for (var i = 0; i < str.length; i++ ) {
+    	ch = str.charCodeAt(i);  // get char 
+    	st = [];                 // set up "stack"
+    	do {
+      		st.push( ch & 0xFF );  // push byte to stack
+      		ch = ch >> 8;          // shift value down by 1 byte
+    	}  
+    	while ( ch );
+   		// add stack contents to result
+    	// done because chars have "wrong" endianness
+    	re = re.concat( st.reverse() );
+  	}
+  	// return an array of bytes
+	return re;
+}
+
+
+
+function hexMD5(bytes){
+	return hex_md5(bytes);
+}
+
+
+function charToVector(rstring) {
+	// Move around chars on a compass and for range - range is -1 to 1
+	// Assume length 10 string
+
+	var chars = "bn9zec8f7gh0ikl1mt2par4yq3sdu5vw6x"
+	var points = [];
+	var pos = 0;
+	var x  = 0;
+	var y = 0;
+	for (var i = 0; i < 10; i++ ) {
+		ch = rstring[i];
+		pos = pos + (chars.indexOf(ch) + 1 ) % chars.length;
+		var angle = (360.0 / chars.length) * pos;
+
+		for (var j = 0; j < 10; j++ ) {
+			if (i != j ){
+				ch = rstring[j];
+				pos = pos + (chars.indexOf(ch) + 1 ) % chars.length;
+				angle += (360.0 / chars.length) * pos;
+			}
+		}
+
+		// Use a += here for different results
+		x = Math.sin(angle); if (x > 1.0) {x = x - 1.0;} if (x < 0.0) { x = x +1.0;}
+		y = Math.cos(angle); if (y > 1.0) {y = y - 1.0;} if (y < 0.0) { y = y +1.0;}
+
+		points.push(x);
+		points.push(y);
+	}
+
+	return points;
+}
+
+/**
+ * Set the metaballs properly
+ */
+
+function setMetaBalls(rstring) {
+
+	//var bytes = stringToBytes(rstring);
+
+	var points = charToVector(rstring);
+
+	/* 0 to 1  then shift down a little for this screen*/
+
+	m0p = $V([(1.0 + points[0])/ 2.0,  (1.0 + points[1])/ 2.0 - 0.3, 0.0]);
+	m1p = $V([(1.0 + points[2])/ 2.0,  (1.0 + points[3])/ 2.0 - 0.3, 0.0]);
+	m2p = $V([(1.0 + points[4])/ 2.0,  (1.0 + points[5])/ 2.0 - 0.3, 0.0]);
+	m3p = $V([(1.0 + points[6])/ 2.0,  (1.0 + points[7])/ 2.0 - 0.3, 0.0]);
+
+
+	/* 0.05 - 0.2 */ 
+
+	m0s = (1.0 + points[8]) * 0.03;
+	m1s = (1.0 + points[9]) * 0.03;
+	m2s = (1.0 + points[8]) * 0.03;
+	m3s = (1.0 + points[9]) * 0.03;
+
+
 }
 
 
@@ -129,7 +233,19 @@ function randomString() {
 
 $S.setup = function () {
 
-	randomString();
+	// See if a var was passe in
+	var vars = getUrlVars();
+	if (vars['chirp']){
+		$("#chirp").val(vars['chirp']); 
+		setMetaBalls(vars['chirp']);
+	}
+	else{
+		var rs = randomString();
+		setMetaBalls(rs);
+		$("#chirp").val(rs); 
+	}
+		
+
 
 	$("#loader").show();
    	$("#loader").center();
@@ -140,7 +256,6 @@ $S.setup = function () {
     metaballShader = new SaitoShader("shaders/metaballs-vs.txt", "shaders/metaballs-fs.txt");
      
    	fboMetaBalls = new SaitoFrameBuffer(fboSize);
-
 
 	plane = new createPlane(new Size2(2.0,2.0),new Colour(1.0,1.0,1.0,1.0));
 	planeMirror = new createPlane(new Size2(2.0,2.0),new Colour(1.0,1.0,1.0,1.0));
@@ -203,17 +318,15 @@ $S.draw = function () {
 	
 	metaballShader.setActive();
 
-	metaballShader.setUniform2f("metaball0", m0x, m0y);
-	metaballShader.setUniform2f("metaball1", m1x, m1y);
-	metaballShader.setUniform2f("metaball2", m2x, m2y);
-	metaballShader.setUniform2f("metaball3", m3x, m3y);
-	metaballShader.setUniform2f("metaball4", m4x, m4y);
+	metaballShader.setUniform2f("metaball0", m0p.e(1), m0p.e(2));
+	metaballShader.setUniform2f("metaball1", m1p.e(1), m1p.e(2));
+	metaballShader.setUniform2f("metaball2", m2p.e(1), m2p.e(2));
+	metaballShader.setUniform2f("metaball3", m3p.e(1), m3p.e(2));
 
 	metaballShader.setUniform1f("metaballS0", m0s);
 	metaballShader.setUniform1f("metaballS1", m1s);
 	metaballShader.setUniform1f("metaballS2", m2s);
 	metaballShader.setUniform1f("metaballS3", m3s);
-	metaballShader.setUniform1f("metaballS4", m4s);
 
  	metaballShader.setUniform2f("resolution", fboSize.w, fboSize.h);
 
@@ -268,7 +381,9 @@ $S.draw = function () {
 <body onload="Saito.initialize()">
     
 <header>
-	<div style="width: 300px; margin-left: auto; margin-right: auto;"><h2 style="text-align: center" id="chirp"></h2></div>
+	<div style="width: 300px; margin-left: auto; margin-right: auto;">
+		<form><input type="text" name="chirp" id="chirp" /></form>
+	</div>
 </header>
 
 

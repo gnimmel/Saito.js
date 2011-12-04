@@ -17,13 +17,11 @@ uniform vec2 metaball0;
 uniform vec2 metaball1;
 uniform vec2 metaball2;
 uniform vec2 metaball3;
-uniform vec2 metaball4;
 
 uniform float metaballS0;
 uniform float metaballS1;
 uniform float metaballS2;
 uniform float metaballS3;
-uniform float metaballS4;
 
 const float aa_th = 1.01; //range for antialiasing
 const float max_th = 0.99; //threshold
@@ -37,7 +35,6 @@ float calcMetaBalls(vec2 pos){
     val +=  metaballS1 / distance(pos, metaball1);
     val +=  metaballS2 / distance(pos, metaball2);
     val +=  metaballS3 / distance(pos, metaball3);
-    val +=  metaballS4 / distance(pos, metaball4);
 
     return val;
 }
@@ -49,22 +46,24 @@ void main(void) {
     float val = 0.0;
     float temp = calcMetaBalls(screenPos);
 
-    //thresholding
+    if (distance(screenPos, metaball0) <= 0.01) {
+      gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    } else if (distance(screenPos, metaball1) <= 0.01) {
+      gl_FragColor = vec4(0.0,1.0,0.0,1.0);
+    } else if (distance(screenPos, metaball2) <= 0.01) {
+      gl_FragColor = vec4(0.0,0.0,1.0,1.0);
 
-    if(temp<max_th){
-       val = 1.0;
-    } else {
+    } else if (distance(screenPos, metaball3) <= 0.01) {
+      gl_FragColor = vec4(0.0,1.0,1.0,1.0);
+    } 
+    else{
 
-      //this is a hacky approach to antialiase them. it works great
-      //on the mainpart of the metaballs but not on the parts connecting them,
-      //where it gets kinda blurry.
-      //I propably have to factor in the function of their energy, but how?
-
-   //   if(temp<aa_th){
-   //    val = smoothstep(0.0, 1.0, (aa_th-temp)*smoothMult);
-    //  } else {
-       val = 0.0;
-    //  }
+      // Threshold
+      if(temp<max_th){
+        val = 1.0;
+      } else {
+        val = 0.0;
+      }
+      gl_FragColor = vec4(val,val,val,1.0);
     }
-    gl_FragColor = vec4(val,val,val,1.0);
 }

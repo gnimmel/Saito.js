@@ -918,7 +918,6 @@ Size2.prototype.width = this.w;
 Size2.prototype.height = this.h;
 
 
-
 /**
  * Utilities
  */
