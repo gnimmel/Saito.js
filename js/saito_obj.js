@@ -120,19 +120,61 @@ var loadModelOBJ = function (objfile) {
 	  	 		}
 	  	  	  
 		  		if (g_cubeOBJparsed[dataCount] == "f"){
-			  		var tverticesArray = [];
+			  	
 		  	  		verticesCount = dataCount+1;
 		  	  	   	   
 		  			while (g_cubeOBJparsed[verticesCount] != "f" && verticesCount < g_cubeOBJparsed.length ) {
-		  	  	   		tverticesArray.push(verticesArray[g_cubeOBJparsed[verticesCount]-1]);   
+
+		  				var vertex =  g_cubeOBJparsed[verticesCount]-1;
+
+		  	  	   		polygonsArray.push(vertex.e(1));
+		  	  	   		polygonsArray.push(vertex.e(2));
+		  	  	   		polygonsArray.push(vertex.e(3));   
 		  	  	   	   	verticesCount = verticesCount+1;  
 		  	  		}
+
 		  	  		///\todo should sort out the OBJ file for any non triangle faces
 		  	  		/// Need to check for triangles or similar here! :S Assume triangles for now! NAUGHTY
-
-					polygonsArray.push(tverticesArray);   	  	   	        
 		  		}
+
+		  		// Loop through the triangles (assuming they are)
+		  		gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexPositionBuffer);
+
+	  	  		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(polygonsArray), gl.STATIC_DRAW);
+	  	  		model.vertexPositionBuffer.itemSize = 3;
+				model.vertexPositionBuffer.numItems = polygonsArray.length / 3;
+
+				///\todo can actually use the OBJ indicies here which might be better
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, model.vertexIndexBuffer);
+				var objVertexIndices = [];
+				for (var i=0; i < model.vertexPositionBuffer.numItems; i++){
+					objVertexIndices.push(i);
+				}
+				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(objVertexIndices), gl.STATIC_DRAW);
+				model.vertexIndexBuffer.itemSize = 1;
+				model.vertexIndexBuffer.numItems = objVertexIndices.length;
+
+
+				///\todo colours I believe are defined in OBJ as well - using white for now
+
+				var objColours = [];
+				for (var i=0; i < model.vertexPositionBuffer.numItems; i++){
+					objColours.push(1.0);
+					objColours.push(1.0);
+					objColours.push(1.0);
+					objColours.push(1.0);
+				}
+
+				gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexColourBuffer);
+
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(objColours), gl.STATIC_DRAW);
+				model.vertexColourBuffer.itemSize = 4;
+				model.vertexColourBuffer.numItems = model.vertexPositionBuffer.numItems;
+
 	  		}
+	 
+
 	  		Saito.resources--;
 	  	},
 	  	error: function(){
@@ -140,8 +182,6 @@ var loadModelOBJ = function (objfile) {
 	  	}  	   
   	});
    
- // 	this.computeCentroid();
-
 	return model;	
 }
 

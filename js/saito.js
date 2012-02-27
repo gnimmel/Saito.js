@@ -117,7 +117,7 @@ Saito.prototype = {
 
 Saito.prototype.fps  = 30;
 Saito.prototype.fullscreen = true;
-Saito.prototype.debug = true;
+Saito.prototype.debug = false;
 Saito.prototype.loops = 0;
 Saito.prototype.skipTicks = 1000 / Saito.prototype.fps;
 Saito.prototype.maxFrameSkip = 10;

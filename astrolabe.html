@@ -81,6 +81,7 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 // Globals you want to mess with
 var planeShader;
+var basicShader;
 var textureRadial;
 var plane;
 var teapot;
@@ -122,8 +123,8 @@ $S.setup = function () {
 	textureRadial = new SaitoTexture("textures/radial.png");
 	teapot = loadModelOBJ("models/teapot.obj");   
 
-	// Ray Shader
 	planeShader = new SaitoShader("shaders/plane-vs.txt", "shaders/plane-fs.txt");
+	basicShader = new SaitoShader("shaders/basic-vs.txt", "shaders/basic-fs.txt");
 }	
 
 
@@ -163,7 +164,7 @@ $S.draw = function () {
 	// Back Plane
 	mvPushMatrix();
 	gl.disable(gl.DEPTH_TEST);
-	mvTranslate([0.0,0.0,-5.0]);
+	mvTranslate([0.0,0.0,-6.0]);
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
@@ -178,6 +179,15 @@ $S.draw = function () {
 	gl.disable(gl.BLEND);
 	gl.enable(gl.DEPTH_TEST);
 
+	mvPopMatrix();
+
+
+	mvPushMatrix();
+	mvTranslate([0.0,0.0,-2.0]);
+	mvScale([0.1,0.1,0.1]);
+	basicShader.setActive();
+	teapot.draw();
+	basicShader.setInactive();
 	mvPopMatrix();
 }    
  

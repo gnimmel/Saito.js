@@ -24,7 +24,7 @@ uniform float metaballS2;
 uniform float metaballS3;
 
 const float aa_th = 1.01; //range for antialiasing
-const float max_th = 0.99; //threshold
+const float max_th = 0.9; //threshold
 const float smoothMult = 1.0/(aa_th-max_th);
 
 
