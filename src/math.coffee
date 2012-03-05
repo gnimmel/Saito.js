@@ -27,7 +27,7 @@ namespace "CoffeeGL", (exports) ->
 
   class exports.Vec2
     # Class methods for nondestructively operating
-    for name in ['add', 'subtract', 'multiply', 'divide']
+    for name in ['add', 'subtract', 'multiply', 'divide', 'normalize']
     	do (name) ->
     	  Vec2[name] = (a,b) ->
           a.copy()[name](b)
@@ -50,6 +50,10 @@ namespace "CoffeeGL", (exports) ->
       m = @length
       @divide m if m > 0
       this
+
+    toNormal: ->
+      m = @length
+      @divide m if m > 0
 
     subtract: (v) ->
       @x -= v.x
@@ -92,7 +96,7 @@ namespace "CoffeeGL", (exports) ->
 
   class exports.Vec3
     # Class methods for nondestructively operating
-    for name in ['add', 'subtract', 'multiply', 'divide']
+    for name in ['add', 'subtract', 'multiply', 'divide', 'normalize']
     	do (name) ->
     	  Vec3[name] = (a,b) ->
           a.copy()[name](b)
@@ -115,6 +119,10 @@ namespace "CoffeeGL", (exports) ->
       m = @length
       @divide m if m > 0
       this
+
+    toNormal: ->
+      m = @length
+      @divide m if m > 0
 
     subtract: (v) ->
       @x -= v.x
@@ -158,7 +166,7 @@ namespace "CoffeeGL", (exports) ->
 # Vector (4 Dimensions)
 
   class exports.Vec4
-    for name in ['add', 'subtract', 'multiply', 'divide']
+    for name in ['add', 'subtract', 'multiply', 'divide', 'normalize']
     	do (name) ->
     	  Vec4[name] = (a,b) ->
           a.copy()[name](b)
@@ -181,6 +189,10 @@ namespace "CoffeeGL", (exports) ->
       m = @length
       @divide m if m > 0
       this
+
+    toNormal: ->
+      m = @length
+      @divide m if m > 0
 
     subtract: (v) ->
       @x -= v.x
@@ -227,7 +239,7 @@ namespace "CoffeeGL", (exports) ->
 # Matrix (4 x 4)
 
   class exports.Matrix4
-    for name in ['add', 'subtract', 'multiply', 'divide', 'addScalar', 'subtractScalar', 'multiplyScalar', 'divideScalar']
+    for name in ['add', 'subtract', 'multiply', 'divide', 'addScalar', 'subtractScalar', 'multiplyScalar', 'divideScalar', 'translate']
     	do (name) ->
     	  Matrix4[name] = (a,b) ->
           a.copy()[name](b)
@@ -235,8 +247,11 @@ namespace "CoffeeGL", (exports) ->
     Matrix4.DIM = 4
 
     # Take a list in column major format
-    constructor: (@a) ->
+    constructor: (@a=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]) ->
+      # todo - add checking
 
+    dup : () ->
+      new Matrix4(@a)
 
     multiplyScalar: (n) ->
       @a = ( num * n for num in @a )
@@ -253,7 +268,10 @@ namespace "CoffeeGL", (exports) ->
     setToIdentity: ->
     	@a = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
 
-    multiply: (m) ->
+    multiply : (m) ->
+      toMultiply m
+
+    toMultiply: (m) ->
       @a[ 0] = @a[0]*m.a[ 0] + @a[ 4]*m.a[ 1] + @a[ 8]*m.a[ 2] + @a[12]*m.a[ 3]
       @a[ 1] = @a[ 1]*m.a[ 0] + @a[ 5]*m.a[ 1] + @a[ 9]*m.a[ 2] + @a[13]*m.a[ 3]
       @a[ 2] = @a[ 2]*m.a[ 0] + @a[ 6]*m.a[ 1] + @a[10]*m.a[ 2] + @a[14]*m.a[ 3]
@@ -296,183 +314,61 @@ namespace "CoffeeGL", (exports) ->
       Vec4 @a[r + 0] @a[r + 4] @a[r + 8] @a[r + 12]
 
 
+    inverse: () ->
 
 
-/ augment Sylvester some
-Matrix.Translation = function (v)
-{
-  if (v.elements.length == 2) {
-    var r = Matrix.I(3);
-    r.elements[2][0] = v.elements[0];
-    r.elements[2][1] = v.elements[1];
-    return r;
-  }
+    transpose: () ->
+      new Matrix4( [ @a[0],@a[4],@a[8],@a[12],@a[1],@a[5],@a[9],@a[13],@a[2],@a[6],@a[10],@a[14],@a[3],@a[7],@a[11],@a[15] ] )
 
-  if (v.elements.length == 3) {
-    var r = Matrix.I(4);
-    r.elements[0][3] = v.elements[0];
-    r.elements[1][3] = v.elements[1];
-    r.elements[2][3] = v.elements[2];
-    return r;
-  }
+    translate: (v) ->
+      if v.DIM == 3 or v.DIM == 4
+        @a[12] += v.x
+        @a[13] += v.y
+        @a[14] += v.z
 
-  throw "Invalid length for Translation";
-}
+      else
+        console.log "CoffeeGL Error - Mismatched vector and matrix dimensions"
 
-Matrix.prototype.flatten = function ()
-{
-    var result = [];
-    if (this.elements.length == 0)
-        return [];
+    print: ()->
+      console.log a[0] + "," + a[4] + "," + a[8] + "," + a[12]
+      console.log a[1] + "," + a[5] + "," + a[9] + "," + a[13]
+      console.log a[2] + "," + a[6] + "," + a[10] + "," + a[14]
+      console.log a[3] + "," + a[7] + "," + a[11] + "," + a[15]
 
+    lookAt: (eye,look,up) ->
+      z = eye.subtract().toNormal()
+      x = up.cross(z).toNormal()
+      y = z.cross(x).toNormal()
 
-    for (var j = 0; j < this.elements[0].length; j++)
-        for (var i = 0; i < this.elements.length; i++)
-            result.push(this.elements[i][j]);
-    return result;
-}
+      m = new Matrix4([x.x,x.y, x.z,0,y.x,y.y,y.z,0,z.x,z.y,z.z,0,0,0,0,1])
+      t = new Matrix4([1,0,0,-eye.x,0,1,0,-eye.y,0,0,1,-eye.z,0,0,0,1])
 
-Matrix.prototype.ensure4x4 = function()
-{
-    if (this.elements.length == 4 &&
-        this.elements[0].length == 4)
-        return this;
+      m.multiply(t)
 
-    if (this.elements.length > 4 ||
-        this.elements[0].length > 4)
-        return null;
+    makePerspective: (fovy,aspect,znear,zfar) ->
+      ymax = znear * Math.tan(fovy * Math.PI / 360.0)
+      ymin = -ymax;
+      xmin = ymin * aspect
+      xmax = ymax * aspect
+      makeFrustum(xmin, xmax, ymin, ymax, znear, zfar)
 
-    for (var i = 0; i < this.elements.length; i++) {
-        for (var j = this.elements[i].length; j < 4; j++) {
-            if (i == j)
-                this.elements[i].push(1);
-            else
-                this.elements[i].push(0);
-        }
-    }
+    makeFrustum: (left, right,bottom, top, znear, zfar) ->
+      x = 2*znear/(right-left)
+      y = 2*znear/(top-bottom)
+      a = (right+left)/(right-left)
+      b = (top+bottom)/(top-bottom)
+      c = -(zfar+znear)/(zfar-znear)
+      d = -2*zfar*znear/(zfar-znear)
+      new Matrix4([x,0,0,0,0,y,0,0,a,b,c,-1,0,0,d,0])
 
-    for (var i = this.elements.length; i < 4; i++) {
-        if (i == 0)
-            this.elements.push([1, 0, 0, 0]);
-        else if (i == 1)
-            this.elements.push([0, 1, 0, 0]);
-        else if (i == 2)
-            this.elements.push([0, 0, 1, 0]);
-        else if (i == 3)
-            this.elements.push([0, 0, 0, 1]);
-    }
+    makeOrtho: (left, right, bottom, top, znear, zfar) ->
+      tx = - (right + left) / (right - left)
+      ty = - (top + bottom) / (top - bottom)
+      tz = - (zfar + znear) / (zfar - znear)
+      new Matrix4([2 / (right - left),0,0,tx,0, 2 / (top - bottom),0,ty,0,0, -2 / (zfar - znear),tz,0,0,0,1])
 
-    return this;
-};
+  exports.radToDeg = (a) ->
+    a * 57.2957795
 
-Matrix.prototype.make3x3 = function()
-{
-    if (this.elements.length != 4 ||
-        this.elements[0].length != 4)
-        return null;
-
-    return Matrix.create([[this.elements[0][0], this.elements[0][1], this.elements[0][2]],
-                          [this.elements[1][0], this.elements[1][1], this.elements[1][2]],
-                          [this.elements[2][0], this.elements[2][1], this.elements[2][2]]]);
-};
-
-Vector.prototype.flatten = function ()
-{
-    return this.elements;
-};
-
-function mht(m) {
-    var s = "";
-    if (m.length == 16) {
-        for (var i = 0; i < 4; i++) {
-            s += "<span style='font-family: monospace'>[" + m[i*4+0].toFixed(4) + "," + m[i*4+1].toFixed(4) + "," + m[i*4+2].toFixed(4) + "," + m[i*4+3].toFixed(4) + "]</span><br>";
-        }
-    } else if (m.length == 9) {
-        for (var i = 0; i < 3; i++) {
-            s += "<span style='font-family: monospace'>[" + m[i*3+0].toFixed(4) + "," + m[i*3+1].toFixed(4) + "," + m[i*3+2].toFixed(4) + "]</font><br>";
-        }
-    } else {
-        return m.toString();
-    }
-    return s;
-}
-
-//
-// gluLookAt
-//
-function makeLookAt(ex, ey, ez,
-                    cx, cy, cz,
-                    ux, uy, uz)
-{
-    var eye = $V([ex, ey, ez]);
-    var center = $V([cx, cy, cz]);
-    var up = $V([ux, uy, uz]);
-
-    var mag;
-
-    var z = eye.subtract(center).toUnitVector();
-    var x = up.cross(z).toUnitVector();
-    var y = z.cross(x).toUnitVector();
-
-    var m = $M([[x.e(1), x.e(2), x.e(3), 0],
-                [y.e(1), y.e(2), y.e(3), 0],
-                [z.e(1), z.e(2), z.e(3), 0],
-                [0, 0, 0, 1]]);
-
-    var t = $M([[1, 0, 0, -ex],
-                [0, 1, 0, -ey],
-                [0, 0, 1, -ez],
-                [0, 0, 0, 1]]);
-    return m.x(t);
-}
-
-//
-// gluPerspective
-//
-function makePerspective(fovy, aspect, znear, zfar)
-{
-    var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
-    var ymin = -ymax;
-    var xmin = ymin * aspect;
-    var xmax = ymax * aspect;
-
-    return makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
-}
-
-//
-// glFrustum
-//
-function makeFrustum(left, right,
-                     bottom, top,
-                     znear, zfar)
-{
-    var X = 2*znear/(right-left);
-    var Y = 2*znear/(top-bottom);
-    var A = (right+left)/(right-left);
-    var B = (top+bottom)/(top-bottom);
-    var C = -(zfar+znear)/(zfar-znear);
-    var D = -2*zfar*znear/(zfar-znear);
-
-    return $M([[X, 0, A, 0],
-               [0, Y, B, 0],
-               [0, 0, C, D],
-               [0, 0, -1, 0]]);
-}
-
-//
-// glOrtho
-//
-function makeOrtho(left, right, bottom, top, znear, zfar)
-{
-    var tx = - (right + left) / (right - left);
-    var ty = - (top + bottom) / (top - bottom);
-    var tz = - (zfar + znear) / (zfar - znear);
-
-    return $M([[2 / (right - left), 0, 0, tx],
-           [0, 2 / (top - bottom), 0, ty],
-           [0, 0, -2 / (zfar - znear), tz],
-           [0, 0, 0, 1]]);
-}
-
-
-      
+  exports.degToRad = (a) ->
+    a * 0.017453292523928

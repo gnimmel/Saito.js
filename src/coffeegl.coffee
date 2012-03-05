@@ -39,7 +39,7 @@ namespace "CoffeeGL", (exports) ->
 
   # Master CoffeeGL Code Class
 
-  class exports.app
+  class exports.App
 
     constructor: (element,@debug=false) ->
       @totalTime = 0.0
@@ -56,6 +56,12 @@ namespace "CoffeeGL", (exports) ->
       @startTime = Date.now()
       @oldTime = @startTime
       @canvas = document.getElementById element
+
+      @modelViewMatrix = []
+      @perspectiveMatrix = []
+
+      @modelViewMatrix.push(new exports.Matrix4())
+      @perspectiveMatrix.push(new exports.Matrix4())
 
       # todo - webgl debug utils
       if @debug
@@ -88,9 +94,51 @@ namespace "CoffeeGL", (exports) ->
     draw: () ->
       0 
 
-  #loadShader: (@vert, @frag, @geom) =>
+    # push the current modelview matrix - perspective is less used tbh
+    pushMatrix: ()->
+      m = modelViewMatrix[modelViewMatrix.length-1].dup()
+      modelViewMatrix.push(m)
+
+    popMatrix: () ->
+      modelViewMatrix.pop()
+
+    # translate takes a 3 dimensional vector
+    translate: (v) ->
+      m = modelViewMatrix[modelViewMatrix.length-1]
+      m.a[12] += v.x
+      m.a[13] += v.y
+      m.a[14] += v.z
+      m
 
 
+    # rotation in degrees around a unit vector
+    rotate: (a, v) ->
+
+      a = exports.degToRad(a)
+
+      m = modelViewMatrix[modelViewMatrix.length-1]
+      r = new Matrix4()
+      r.a[0] = Math.cos(a) + (v.x * v.x) * (1 - Math.cos(a))
+      r.a[1] = (v.y * v.x) * (1 - Math.cos(a)) + v.z * Math.sin(a)
+      r.a[2] = (v.z * v.x) * (1 - Math.cos(a)) - v.y * Math.sin(a)
+
+      r.a[4] = (v.x * v.y) * (1 - Math.cos(a)) - v.z * Math.sin(a)
+      r.a[5] = Math.cos(a) + (v.y * v.y) * (1 - Math.cos(a))
+      r.a[6] = (v.z * v.y) * (1 - Math.cos(a)) - v.x * Math.sin(a)
+
+      r.a[8] = (v.z * v.x) * (1 - Math.cos(a)) - v.y * Math.sin(a)
+      r.a[9] = (v.z * v.y) * (1 - Math.cos(a)) + v.x * Math.sin(a)
+      r.a[10] = Math.cos(a) + (v.z * v.z) * (1 - Math.cos(a))
+
+      m.toMultiply(r)
+
+    # scale takes a 3 dimensional vector - doesn't affect w
+    scale: (v)->
+      m = modelViewMatrix[modelViewMatrix.length-1]
+      m.a[0] *= v.x
+      m.a[5] *= v.y
+      m.a[10] *= v.z
+      m
 
 # OnEachFrame function
 # Taken from http://nokarma.org/2011/02/02/javascript-game-development-the-game-loop/index.html

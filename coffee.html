@@ -64,11 +64,13 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 
 <script type="text/coffeescript">
 
-  cgl = new CoffeeGL.app('webgl-canvas',true)
+  cgl = new CoffeeGL.App('webgl-canvas',false)
   
-  fbo = new CoffeeGL.fbo(new CoffeeGL.Vec2(640,480))
+  fbo = new CoffeeGL.Fbo(new CoffeeGL.Vec2(640,480))
 
-  shader = new CoffeeGL.shader.basic()
+  shader = new CoffeeGL.Shader.Lighting()
+ 
+  texture = new CoffeeGL.Texture('textures/radial.png')
 
   cgl.draw = () ->
     @gl.clearColor(0.05, 0.05, 0.05, 1.0)

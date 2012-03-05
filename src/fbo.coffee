@@ -25,7 +25,7 @@ namespace "CoffeeGL", (exports) ->
 
   # Basic FBO with depth, linear filtering and RGBA with unsigned bytes
 
-  class exports.fbo
+  class exports.Fbo
 
     constructor: (@size) ->
       gl = exports.context.gl

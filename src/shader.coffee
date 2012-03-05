@@ -25,34 +25,41 @@ namespace "CoffeeGL", (exports) ->
   # Basic FBO with depth, linear filtering and RGBA with unsigned bytes
   # given text variables - however they come, compile up a shader
 
-  class exports.shader
+  class exports.Shader
 
     constructor: (@sv, @sf, @sg=null) ->
       gl = exports.context.gl
       # Create the Vertex Shader
       @vertexShader = gl.createShader(gl.VERTEX_SHADER);
-      if @vertexShader
-        gl.shaderSource(@vertexShader, @sv)
-        gl.compileShader(@vertexShader)
-        if not gl.getShaderParameter(@vertexShader,gl.COMPILE_STATUS)	
-          console.log "CoffeeGL Error - Could not compile vertex shader"
-      else
+      if not @vertexShader
         console.log "CoffeeGL Error - No vertex shader object could be created"
 
       # Fragment Shader 
       
       @fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
 	 
-      if @fragmentShader
-        gl.shaderSource(@fragmentShader,@sf)
-        gl.compileShader(@fragmentShader)
-        if not gl.getShaderParameter(@fragmentShader,gl.COMPILE_STATUS)
-          console.log "CoffeeGL Error - Could not compile fragment shader"
-      else
+      if not @fragmentShader
         console.log "CoffeeGL Error - No Fragment shader object could be created"
-      
+     
+      compile(@sv,@sf,@sg)
+
       @shaderProgram = gl.createProgram()
 
+    # seperate compile so we can redo on the fly
+    compile: (sv,sf,sg) ->
+      gl = exports.context.gl
+      @sv = sv
+      @sf = sf
+      @sg = sg
+      gl.shaderSource(@vertexShader, @sv)
+      gl.compileShader(@vertexShader)
+      if not gl.getShaderParameter(@vertexShader,gl.COMPILE_STATUS)	
+        console.log "CoffeeGL Error - Could not compile vertex shader"
+ 
+      gl.shaderSource(@fragmentShader,@sf)
+      gl.compileShader(@fragmentShader)
+      if not gl.getShaderParameter(@fragmentShader,gl.COMPILE_STATUS)
+        console.log "CoffeeGL Error - Could not compile fragment shader"
 
       # todo - GEOMETRY SHADER
 
@@ -102,12 +109,23 @@ namespace "CoffeeGL", (exports) ->
     setMatrix4f: (name, m) ->
       gl = exports.context.gl
       uniform = gl.getUniformLocation(@shaderProgram, name)	
-      gl.uniformMatrix4fv(uniform, false, new Float32Array(m.flatten()))
+      gl.uniformMatrix4fv(uniform, false, new Float32Array(m.a))
+
+
+    enableAttribArray: (name) ->
+      gl = exports.context.gl
+      position = gl.getAttribLocation(@shaderProgram, name)
+      gl.enableVertexAttribArray(position)
+
+    getAttribArray: (name) ->
+      gl = exports.context.gl
+      gl.getAttribLocation(@shaderProgram, name)
 
 
   # create a basic pass-through shader we can use
+  # todo - basic fragment doesnt compile ><
 
-  class exports.shader.basic extends exports.shader
+  class exports.Shader.Basic extends exports.Shader
     constructor: () ->
   
       @sv = "attribute vec3 aVertexPosition;
@@ -138,7 +156,7 @@ void main(void) { gl_FragColor = vColor; }"
 
 
   # create a lighting shader thats fairly basic
-  class exports.shader.lighting extends exports.shader
+  class exports.Shader.Lighting extends exports.Shader
 
     constructor: () ->
       @sv = "attribute vec3 aVertexPosition;
