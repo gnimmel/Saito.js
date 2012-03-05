@@ -17,15 +17,8 @@ oni@section9.co.uk
 
 http://www.section9.co.uk
 
-Based on the excellent work from:
-
-* Learning WebGL - http://learningwebgl.com/
-* JQuery and JQueryUI - http://jquery.com/
-* Sylvester Maths Library - http://sylvester.jcoglan.com/
-
 This software is released under Creative Commons Attribution Non-Commercial Share Alike
 http://creativecommons.org/licenses/by-nc-sa/3.0/
-
 
  -->
 
@@ -50,6 +43,9 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="/favicon.ico">
 
+<script src="lib/coffee-script.js" type="text/javascript" charset="utf-8"></script>
+<script src="lib/webgl-debug.js" type="text/javascript" charset="utf-8"></script>
+
 
 </head>
 
@@ -63,7 +59,23 @@ http://creativecommons.org/licenses/by-nc-sa/3.0/
 <canvas id="webgl-canvas" style="border: none;" width="580" height="580"></canvas>
 
 <!-- JS For Additional OpenGL Functions -->
+
 <script type="text/javascript" src="lib/coffeegl.js"></script>
+
+<script type="text/coffeescript">
+
+  cgl = new CoffeeGL.app('webgl-canvas',true)
+  
+  fbo = new CoffeeGL.fbo(new CoffeeGL.Vec2(640,480))
+
+  shader = new CoffeeGL.shader.basic()
+
+  cgl.draw = () ->
+    @gl.clearColor(0.05, 0.05, 0.05, 1.0)
+    @gl.clear(@gl.COLOR_BUFFER_BIT | @gl.DEPTH_BUFFER_BIT)
+
+
+</script>
 
 </body>
 
